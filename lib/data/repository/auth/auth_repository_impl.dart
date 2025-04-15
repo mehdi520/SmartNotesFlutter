@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 
 
 import 'package:dartz/dartz.dart';
+import 'package:hive/hive.dart';
+import 'package:note_book/data/data_sources/local/HiveManager.dart';
 import 'package:note_book/data/data_sources/remote/api_service.dart';
 import 'package:note_book/domain/auth/contract/auth_repository.dart';
 import 'package:note_book/domain/models/auth_models/sign_up_req_model.dart';
@@ -54,6 +56,7 @@ class AuthRepositoryImpl extends AuthRepository {
       if (httpResponse.response.statusCode == HttpStatus.ok) {
         print(httpResponse.response);
         if (httpResponse.data.status) {
+          HiveManager.saveToken(httpResponse.data.access_Token!);
          // await _secureStorage.setValue(usertoken, httpResponse.data.access_Token!);
           return await getProfile();
         } else {
@@ -83,7 +86,7 @@ class AuthRepositoryImpl extends AuthRepository {
       if (httpResponse.response.statusCode == HttpStatus.ok) {
         print(httpResponse.response);
         if (httpResponse.data.status) {
-        // await _secureStorage.saveProfile(httpResponse.data.data);
+          HiveManager.saveUserJson(httpResponse.data.data!);
           return Right(httpResponse.data);
         } else {
           return Left(

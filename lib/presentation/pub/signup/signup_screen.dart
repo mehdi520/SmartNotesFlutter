@@ -6,6 +6,7 @@ import 'package:note_book/infra/loader/overlay_service.dart';
 import 'package:note_book/infra/utils/enums.dart';
 import 'package:note_book/infra/utils/toast_utils.dart';
 import 'package:note_book/presentation/blocs/auth_bloc/auth_bloc.dart';
+import 'package:note_book/infra/utils/validation_utils.dart';
 
 import '../../../infra/common/common_widgets/buttons/PrimaryButton.dart';
 import '../../../infra/common/common_widgets/input_fields/TextInputFormField.dart';
@@ -40,6 +41,71 @@ class SignupScreen extends StatelessWidget {
         ),
       );
     }
+  }
+
+  String? _validateName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Name is required';
+    }
+    if (value.length < 2) {
+      return 'Name must be at least 2 characters long';
+    }
+    if (value.length > 50) {
+      return 'Name must not exceed 50 characters';
+    }
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Phone number is required';
+    }
+    if (!ValidationUtils.isValidPhoneNumber(value)) {
+      return 'Please enter a valid phone number';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email is required';
+    }
+    if (!ValidationUtils.isValidEmail(value)) {
+      return 'Please enter a valid email address';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (!ValidationUtils.hasUpperCase(value)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!ValidationUtils.hasLowerCase(value)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!ValidationUtils.hasNumber(value)) {
+      return 'Password must contain at least one number';
+    }
+    if (!ValidationUtils.hasSpecialChar(value)) {
+      return 'Password must contain at least one special character';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != _passController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
   }
 
   @override
@@ -78,7 +144,12 @@ class SignupScreen extends StatelessWidget {
                       children: [
                         SizedBox(height: context.mediaQueryHeight * 0.08),
                         Row(
-                          children: [Image.asset(AppImages.back, height: 15)],
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Image.asset(AppImages.back, height: 15),
+                            ),
+                          ],
                         ),
                         SizedBox(height: context.mediaQueryHeight * 0.05),
                         CommontextField(
@@ -98,60 +169,37 @@ class SignupScreen extends StatelessWidget {
                           hintText: 'Enter your name here',
                           ctrl: _nameController,
                           formLabel: 'Name',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Name is required';
-                            }
-                            return null;
-                          },
+                          validator: _validateName,
                         ),
                         Textinputformfield(
                           hintText: 'Enter your phone here',
                           ctrl: _phoneController,
                           formLabel: 'Phone',
                           keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Phone is required';
-                            }
-                            return null;
-                          },
+                          validator: _validatePhone,
                         ),
                         SizedBox(height: 10),
                         Textinputformfield(
                           hintText: 'Enter your email here',
                           ctrl: _emailController,
                           formLabel: 'Email',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Email is required';
-                            }
-                            return null;
-                          },
+                          validator: _validateEmail,
                         ),
                         SizedBox(height: 10),
                         Textinputformfield(
                           hintText: 'Enter your password here',
                           ctrl: _passController,
                           formLabel: 'Password',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Password is required';
-                            }
-                            return null;
-                          },
+                          isSecureTextField: true,
+                          validator: _validatePassword,
                         ),
                         SizedBox(height: 10),
                         Textinputformfield(
                           hintText: 'Confirm your password here',
                           ctrl: _conFpassController,
                           formLabel: 'Confirm Password',
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Confirm password is required';
-                            }
-                            return null;
-                          },
+                          isSecureTextField: true,
+                          validator: _validateConfirmPassword,
                         ),
                         SizedBox(height: 30),
                         Builder(
