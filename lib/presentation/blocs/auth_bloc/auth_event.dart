@@ -8,12 +8,19 @@ abstract class AuthEvent extends Equatable {
 }
 
 class LoginEvent extends AuthEvent {
-  SignUpReqModel req;
+  final SignUpReqModel req;
 
-  LoginEvent({required this.req});
+  const LoginEvent({required this.req});
+
+  @override
+  List<Object> get props => [req];
 }
 
 class SignupEvent extends AuthEvent {
-  SignUpReqModel req;
-  SignupEvent({required this.req});
+  final SignUpReqModel req;
+
+  const SignupEvent({required this.req});
+
+  @override
+  List<Object> get props => [req];
 }

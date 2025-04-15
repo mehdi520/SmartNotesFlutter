@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:note_book/infra/core/core_exports.dart';
 
 import '../form_fields/PrimaryTextInputField.dart';
 
@@ -10,6 +11,7 @@ class Textinputformfield extends StatelessWidget {
   final String? Function(String?)? validator;
   final String hintText;
   final String formLabel;
+  final bool isEnabled;
 
   const Textinputformfield({
     super.key,
@@ -20,6 +22,7 @@ class Textinputformfield extends StatelessWidget {
     this.validator,
     required this.ctrl,
     required this.formLabel,
+    this.isEnabled = true,
   });
 
   @override
@@ -39,11 +42,12 @@ class Textinputformfield extends StatelessWidget {
           Primarytextinputfield(
             hintText: hintText,
             ctrl: ctrl,
-            imeAction: imeAction,keyboardType: keyboardType,
+            imeAction: imeAction,
+            keyboardType: keyboardType,
             isSecureTextField: isSecureTextField,
             validator: validator,
+            isEnabled: isEnabled,
           )
-
         ],
       ),
     );

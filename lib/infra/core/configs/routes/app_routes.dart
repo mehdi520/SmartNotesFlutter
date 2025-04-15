@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:note_book/presentation/cat/add_update_cat.dart';
-import 'package:note_book/presentation/chnage_pass/change_pass_screen.dart';
+import 'package:note_book/presentation/change_pass/change_pass_screen.dart';
 import 'package:note_book/presentation/home/home_screen.dart';
 import 'package:note_book/presentation/notes/add_update_note_screen.dart';
 import 'package:note_book/presentation/notes/note_screen.dart';

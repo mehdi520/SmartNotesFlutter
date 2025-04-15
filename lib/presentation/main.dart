@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:note_book/presentation/blocs/user_bloc/user_bloc.dart';
 import 'package:note_book/presentation/pub/splash/bloc/splash_cubit.dart';
 
 import '../infra/core/core_exports.dart';
@@ -24,6 +25,9 @@ class MyApp extends StatelessWidget {
             create: (context) =>
             SplashCubit()
               ..appStarted()
+        ),
+        BlocProvider(
+          create: (context) => UserBloc(),
         ),
       ],
       child: MaterialApp(

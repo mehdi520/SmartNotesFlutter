@@ -5,6 +5,8 @@ import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:note_book/data/data_sources/local/HiveManager.dart';
+import 'package:note_book/data/repository/user/user_repository_impl.dart';
+import 'package:note_book/domain/user/usecases/change_password_usecase.dart';
 import 'package:note_book/infra/network/interceptors/auth_interceptor.dart';
 import 'package:note_book/infra/network/interceptors/logging_interceptor.dart';
 
@@ -13,6 +15,9 @@ import '../../data/repository/auth/auth_repository_impl.dart';
 import '../../domain/auth/contract/auth_repository.dart';
 import '../../domain/auth/usecases/login_usecase.dart';
 import '../../domain/auth/usecases/signup_usecase.dart';
+import '../../domain/user/contract/user_repository.dart';
+import '../../domain/user/usecases/get_profile_usecase.dart';
+import '../../domain/user/usecases/update_profile_usecase.dart';
 import '../core/configs/constants/constants.dart';
 
 final sl = GetIt.instance;
@@ -56,8 +61,13 @@ Future<void> initializedDepencies() async {
 
   // repositories
   sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl()));
+  sl.registerSingleton<UserRepository>(UserRepositoryImpl(sl()));
 
   // usecases
   sl.registerSingleton<SignupUsecase>(SignupUsecase());
   sl.registerSingleton<LoginUsecase>(LoginUsecase(sl<AuthRepository>()));
+  sl.registerSingleton<UpdateProfileUsecase>(UpdateProfileUsecase(sl()));
+  sl.registerSingleton<GetProfileUsecase>(GetProfileUsecase(sl()));
+  sl.registerSingleton<ChangePasswordUsecase>(ChangePasswordUsecase(sl()));
+
 }

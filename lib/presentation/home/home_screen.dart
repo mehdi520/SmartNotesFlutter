@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_book/domain/models/category/data_models/cat_model/cat_model.dart';
 import 'package:note_book/infra/core/core_exports.dart';
 import 'package:note_book/infra/extensions/media_query_extension.dart';
+import 'package:note_book/presentation/blocs/user_bloc/user_bloc.dart';
 import 'package:note_book/presentation/home/widgets/book_card.dart';
+import 'package:note_book/data/data_sources/local/HiveManager.dart';
 
 import 'widgets/home_header.dart';
 
@@ -55,7 +58,12 @@ class NoteDashboardScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Header(),
+              BlocBuilder<UserBloc, UserState>(
+                builder: (context, state) {
+                  final user = state.user ?? HiveManager.getUserJson();
+                  return Header(userName: user?.name ?? '');
+                },
+              ),
               const SizedBox(height: 24),
 
               // Available Space Card
@@ -166,7 +174,10 @@ class NoteDashboardScreen extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          DrawerHeader(
+          BlocBuilder<UserBloc, UserState>(
+            builder: (context, state) {
+              final user = state.user ?? HiveManager.getUserJson();
+              return DrawerHeader(
                 decoration: BoxDecoration(
                   color: AppColors.lightBlue,
                 ),
@@ -191,19 +202,20 @@ class NoteDashboardScreen extends StatelessWidget {
                       height: 15,
                     ),
                     Text(
-                      'Mehdi Test',
+                      user?.name ?? '',
                       style: TextStyle(
                           color: AppColors.white, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      'abc@gmail.com',
+                      user?.email ?? '',
                       style: TextStyle(
                           color: AppColors.white, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
+              );
+            },
           ),
-
           ListTile(
             leading: Image.asset(
               AppImages.profile_icon,
@@ -250,7 +262,15 @@ class NoteDashboardScreen extends StatelessWidget {
             ),
             title: Text('Logout'),
             onTap: () {
-
+              // Clear user data and token
+             HiveManager.clearUserData();
+              
+              // Clear navigation stack and go to login
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.loginRoute,
+                (route) => false,
+              );
             },
           ),
         ],

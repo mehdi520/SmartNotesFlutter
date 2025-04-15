@@ -39,6 +39,7 @@ class HiveManager {
   }
 
   static Future<void> clearUserData() async {
+    deleteToken();
     await _userBox.delete(userKey);
     await _userBox.delete(tokenKey);
   }

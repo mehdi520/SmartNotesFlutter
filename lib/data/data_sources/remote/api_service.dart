@@ -5,12 +5,12 @@ import 'package:note_book/domain/models/category/data_models/cat_model/cat_model
 import 'package:note_book/domain/models/category/response_models/get_user_cats_res_model/get_user_cats_res_model.dart';
 import 'package:note_book/domain/models/common_models/base_response_model.dart';
 import 'package:note_book/domain/models/user/req_model/pass_change_req_model.dart';
-import 'package:note_book/domain/models/user/req_model/update_profile_req_model.dart';
 import 'package:note_book/domain/models/user/response_model/get_profile_res_model.dart';
 import 'package:retrofit/http.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../../../domain/models/user/req_model/update_profile_req_model.dart';
 import '../../../infra/core/configs/constants/constants.dart';
 
 part 'api_service.g.dart';

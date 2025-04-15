@@ -31,7 +31,7 @@ class SignupScreen extends StatelessWidget {
 
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
-        LoginEvent(
+        SignupEvent(
           req: SignUpReqModel(
             name: _nameController.text,
             email: _emailController.text,

@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/core_exports.dart';
@@ -9,6 +11,7 @@ class Primarytextinputfield extends StatelessWidget {
   final bool? isSecureTextField;
   final String? Function(String?)? validator;
   final String hintText;
+  final bool isEnabled;
 
   const Primarytextinputfield({
     super.key,
@@ -17,7 +20,8 @@ class Primarytextinputfield extends StatelessWidget {
     this.keyboardType,
     this.isSecureTextField,
     this.validator,
-    required this.ctrl
+    required this.ctrl,
+    this.isEnabled = true,
   });
 
   @override
@@ -32,7 +36,7 @@ class Primarytextinputfield extends StatelessWidget {
         fontSize: 16,
         fontWeight: FontWeight.normal
       ),
-
+      enabled: isEnabled,
       decoration: InputDecoration(
         hintText: hintText,
         filled: true,

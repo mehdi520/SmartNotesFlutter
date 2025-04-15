@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../infra/core/core_exports.dart';
 
 class Header extends StatelessWidget {
+  final String userName;
+
   const Header({
-    super.key,
-  });
+    Key? key,
+    required this.userName,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +19,7 @@ class Header extends StatelessWidget {
           children: [
             SizedBox(height: 20,),
             Text(
-              "Welcome, Mehdi !",
+              "Welcome, $userName !",
               style: TextStyle(color: AppColors.primary),
             ),
             SizedBox(height: 4),
