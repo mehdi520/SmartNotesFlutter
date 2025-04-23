@@ -4,21 +4,20 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:note_book/data/data_sources/remote/api_service.dart';
-import 'package:note_book/domain/category/contract/category_repository.dart';
-import 'package:note_book/domain/models/category/data_models/cat_model/cat_model.dart';
 import 'package:note_book/domain/models/common_models/base_response_model.dart';
+import 'package:note_book/domain/models/note/data_model/note_data_model.dart';
+import 'package:note_book/domain/models/note/req_models/pagination_req_model.dart';
+import 'package:note_book/domain/note/contract/note_repository.dart';
 
-import '../../../domain/models/common_models/base_error_model.dart';
-
-class CategoryRepositoryImpl extends CategoryRepository {
+class NoteRepositoryImpl extends NoteRepository {
   final ApiService _apiService;
 
-  CategoryRepositoryImpl(this._apiService);
+  NoteRepositoryImpl(this._apiService);
 
   @override
-  Future<Either> addOrUpdateCat(CatModel req) async {
+  Future<Either> addUpdateNote(NoteDataModel req) async {
     try {
-      final httpResponse = await _apiService.addOrUpdateCat(req: req);
+      final httpResponse = await _apiService.addOrUpdateNote(req: req);
 
       if (httpResponse.response.statusCode == HttpStatus.ok) {
         print(httpResponse.response);
@@ -56,9 +55,9 @@ class CategoryRepositoryImpl extends CategoryRepository {
   }
 
   @override
-  Future<Either> deleteCat(int id) async {
+  Future<Either> delNote(int note_id) async {
     try {
-      final httpResponse = await _apiService.deleteCat(id: id);
+      final httpResponse = await _apiService.deleteNote(noteId: note_id);
 
       if (httpResponse.response.statusCode == HttpStatus.ok) {
         print(httpResponse.response);
@@ -96,9 +95,9 @@ class CategoryRepositoryImpl extends CategoryRepository {
   }
 
   @override
-  Future<Either> getCategories() async {
+  Future<Either> getNotes(PaginationReqModel req) async {
     try {
-      final httpResponse = await _apiService.getUserCats();
+      final httpResponse = await _apiService.getUserNotes(req: req);
 
       if (httpResponse.response.statusCode == HttpStatus.ok) {
         print(httpResponse.response);

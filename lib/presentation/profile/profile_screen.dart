@@ -6,6 +6,7 @@ import 'package:note_book/infra/common/common_widgets/buttons/PrimaryButton.dart
 import 'package:note_book/infra/common/common_widgets/input_fields/TextInputFormField.dart';
 import 'package:note_book/infra/core/core_exports.dart';
 import 'package:note_book/infra/loader/overlay_service.dart';
+import 'package:note_book/infra/utils/date_utils.dart';
 import 'package:note_book/infra/utils/enums.dart';
 import 'package:note_book/infra/utils/toast_utils.dart';
 import 'package:note_book/infra/utils/validation_utils.dart';
@@ -50,7 +51,9 @@ class ProfileScreen extends StatelessWidget {
     final _nameController = TextEditingController(text: user.name);
     final _emailController = TextEditingController(text: user.email);
     final _phoneController = TextEditingController(text: user.phone);
-    final _dateController = TextEditingController(text: user.createdAt);
+    final _dateController = TextEditingController(
+      text: DateUtil.getDateFromServerDate(user.createdAt)
+    );
 
     void _updateProfile() {
       if (_formKey.currentState!.validate()) {

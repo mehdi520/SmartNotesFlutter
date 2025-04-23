@@ -3,25 +3,29 @@ import 'package:flutter/material.dart';
 
 class ColorUtils {
   static List<String> colorArray = [
-    'FF9990FF',  // Light Purple
-    'FFFF5723',  // Deep Orange
-    'FFFF4081',  // Pink
-    'FF4CAF50',  // Green
-    'FF2196F3',  // Blue
-    'FF9C27B0',  // Purple
-    'FF00BCD4',  // Cyan
-    'FF3F51B5',  // Indigo
-    'FF8BC34A',  // Light Green
-    'FFFFEB3B',  // Yellow
-    'FF009688',  // Teal
-    'FF673AB7',  // Deep Purple
-    'FF795548',  // Brown
-    'FF607D8B',  // Blue Grey
+    '#9990FF',  // Light Purple
+    '#FF5723',  // Deep Orange
+    '#FF4081',  // Pink
+    '#4CAF50',  // Green
+    '#2196F3',  // Blue
+    '#9C27B0',  // Purple
+    '#00BCD4',  // Cyan
+    '#3F51B5',  // Indigo
+    '#8BC34A',  // Light Green
+    '#FFEB3B',  // Yellow
+    '#009688',  // Teal
+    '#673AB7',  // Deep Purple
+    '#795548',  // Brown
+    '#607D8B',  // Blue Grey
   ];
 
   // Function to convert hex (without '#') to Color
-  static Color colorFromHex(String hexCode) {
-    return Color(int.parse('0x$hexCode')); // 'FF' is for full opacity
+  static Color colorFromHex(String hex) {
+    hex = hex.replaceAll('#', '');
+    if (hex.length == 6) {
+      hex = 'FF$hex'; // add opacity if missing
+    }
+    return Color(int.parse(hex, radix: 16));
   }
   static Color getDefaultColor() {
     int randomIndex = 0;
@@ -33,4 +37,5 @@ class ColorUtils {
     int randomIndex = (colorArray.length * (new DateTime.now().millisecondsSinceEpoch % 100) / 100).toInt();
     return colorFromHex(colorArray[randomIndex]);
   }
+
 }

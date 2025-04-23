@@ -45,6 +45,7 @@ dependencies:
   json_annotation: ^4.9.0
   dartz:
   fluttertoast: ^8.2.1
+  intl:
 
 
 

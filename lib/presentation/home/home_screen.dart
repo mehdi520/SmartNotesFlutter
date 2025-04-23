@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_book/domain/models/category/data_models/cat_model/cat_model.dart';
 import 'package:note_book/infra/core/core_exports.dart';
 import 'package:note_book/infra/extensions/media_query_extension.dart';
+import 'package:note_book/infra/loader/overlay_service.dart';
+import 'package:note_book/infra/utils/enums.dart';
+import 'package:note_book/infra/utils/toast_utils.dart';
+import 'package:note_book/presentation/blocs/cat_bloc/cat_bloc.dart';
 import 'package:note_book/presentation/blocs/user_bloc/user_bloc.dart';
 import 'package:note_book/presentation/home/widgets/book_card.dart';
 import 'package:note_book/data/data_sources/local/HiveManager.dart';
@@ -10,32 +14,28 @@ import 'package:note_book/data/data_sources/local/HiveManager.dart';
 import 'widgets/home_header.dart';
 
 class NoteDashboardScreen extends StatelessWidget {
-
-  final List<CatModel> bookList = [
-    CatModel(title: "Academic", fileCount: 50, iconColor: 'FF9990FF', id: 1),
-    CatModel(title: "Work", fileCount: 50, iconColor: 'FFF0B27A', id: 1),
-    CatModel(title: "Others", fileCount: 50, iconColor: 'FF9990FF', id: 1),
-    CatModel(title: "Personal", fileCount: 50, iconColor: 'ff6B4EFF', id: 1),
-    CatModel(title: "test", fileCount: 50, iconColor: 'FFF0B27A', id: 1),
-    CatModel(title: "School", fileCount: 50, iconColor: 'ff6B4EFF', id: 1),
-    CatModel(title: "Market", fileCount: 50, iconColor: 'FFF0B27A', id: 1),
-    // CatModel(title: "", fileCount: "25 Notes", size: "1.57 GB", icon: Icons.person, iconColor: 'FFF0B27A'),
-    // CatModel(title: "", fileCount: "5 Notes", size: "1.02 GB", icon: Icons.insert_drive_file, iconColor: 'FFDF8DE1'),
-    // CatModel(title: "", fileCount: "15 Notes", size: "56 MBs", icon: Icons.menu_book, iconColor: 'ff6B4EFF'),
-    // CatModel(title: "Academic", fileCount: "50 Notes", size: "2.26 GB", icon: Icons.lightbulb, iconColor: 'FF9990FF'),
-    // CatModel(title: "Work", fileCount: "25 Notes", size: "1.57 GB", icon: Icons.person, iconColor: 'FFF0B27A'),
-    // CatModel(title: "Others", fileCount: "5 Notes", size: "1.02 GB", icon: Icons.insert_drive_file, iconColor: 'FFDF8DE1'),
-    // CatModel(title: "Personal", fileCount: "15 Notes", size: "56 MBs", icon: Icons.menu_book, iconColor: 'ff6B4EFF'),
-    // CatModel(title: "Academic", fileCount: "50 Notes", size: "2.26 GB", icon: Icons.lightbulb, iconColor: 'FF9990FF'),
-    // CatModel(title: "Work", fileCount: "25 Notes", size: "1.57 GB", icon: Icons.person, iconColor: 'FFF0B27A'),
-    // CatModel(title: "Others", fileCount: "5 Notes", size: "1.02 GB", icon: Icons.insert_drive_file, iconColor: 'FFDF8DE1'),
-    // CatModel(title: "Personal", fileCount: "15 Notes", size: "56 MBs", icon: Icons.menu_book, iconColor: 'ff6B4EFF'),
-    // CatModel(title: "Academic", fileCount: "50 Notes", size: "2.26 GB", icon: Icons.lightbulb, iconColor: 'FF9990FF'),
-    // CatModel(title: "Work", fileCount: "25 Notes", size: "1.57 GB", icon: Icons.person, iconColor: 'FFF0B27A'),
-    // CatModel(title: "Others", fileCount: "5 Notes", size: "1.02 GB", icon: Icons.insert_drive_file, iconColor: 'FFDF8DE1'),
-  ];
+  final OverlayService _loadingService = OverlayService();
 
 
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => CatBloc()..add(GetCatEvent()),
+      child: _NoteDashboardContent(
+        loadingService: _loadingService,
+      ),
+    );
+  }
+}
+
+class _NoteDashboardContent extends StatelessWidget {
+  final OverlayService loadingService;
+
+
+  const _NoteDashboardContent({
+    required this.loadingService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,72 +45,80 @@ class NoteDashboardScreen extends StatelessWidget {
         foregroundColor: AppColors.white,
         child: Icon(Icons.add, size: 32),
         onPressed: () {
+          final bloc = context.read<CatBloc>();
           Navigator.pushNamed(
-              context,  AppRoutes.categoryRoute
+            context,
+            AppRoutes.categoryRoute,
+            arguments: bloc,
           );
         },
       ),
       drawer: _navDrawer(context),
       body: SafeArea(
-        child: Padding(
-          padding:  EdgeInsets.symmetric(horizontal: context.mediaQueryWidth * 0.09, vertical: context.mediaQueryHeight * 0.01),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              BlocBuilder<UserBloc, UserState>(
-                builder: (context, state) {
-                  final user = state.user ?? HiveManager.getUserJson();
-                  return Header(userName: user?.name ?? '');
-                },
-              ),
-              const SizedBox(height: 24),
+        child: BlocListener<CatBloc, CatState>(
+          listenWhen: (previous, current) => current.apiIdentifier == "get_cat",
+          listener: (context, state) {
+            print("home state "  + state.apiStatus.toString());
 
-              // Available Space Card
-              Banner(),
-              const SizedBox(height: 24),
+            if (state.apiStatus == ApiStatus.loading) {
+              loadingService.showLoadingOverlay(context);
+            }
 
-              Expanded(
-                child: GridView.builder(
-                  itemCount: bookList.length,
-                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 295,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.85,
-                  ),
-                  itemBuilder: (context, index) {
-                    final book = bookList[index];
-                    return BookCard(
-                      title: book.title.toString(),
-                      fileCount: book.fileCount.toString() + "Notes",
-                      icon: Icons.menu_book,
-                      iconColor: book.iconColor.toString(),
-                    );
-                  },
+            if (state.apiStatus == ApiStatus.success) {
+              loadingService.hideLoadingOverlay();
+            }
+            if (state.apiStatus == ApiStatus.error) {
+              loadingService.hideLoadingOverlay();
+              ToastUtils.showError(state.resp?.message ?? ' failed');
+            }
+          },
+          child: BlocBuilder<CatBloc, CatState>(
+            builder: (context, state) {
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: context.mediaQueryWidth * 0.09,
+                    vertical: context.mediaQueryHeight * 0.01),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    BlocBuilder<UserBloc, UserState>(
+                      builder: (context, state) {
+                        final user = state.user ?? HiveManager.getUserJson();
+                        return Header(userName: user?.name ?? '');
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Available Space Card
+                    Banner(),
+                    const SizedBox(height: 24),
+
+                    Expanded(
+                      child: GridView.builder(
+                        itemCount: state.cats!.length,
+                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 295,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                          childAspectRatio: 0.9,
+                        ),
+                        itemBuilder: (context, index) {
+                          final book = state.cats![index];
+                          return BookCard(
+                            title: book.title.toString(),
+                            fileCount: book.userId.toString() + "Notes",
+                            icon: Icons.menu_book,
+                            iconColor: book.iconColor.toString(),
+                            noteBookId: book.noteBookId, cat: book,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-
-
-              // // File Category Grid
-              // Expanded(
-              //   child: GridView.count(
-              //     crossAxisCount: 5,
-              //     crossAxisSpacing: 16,
-              //     mainAxisSpacing: 16,
-              //     children: [
-              //       BookCard(title: "Personal", fileCount: "15 Notes", size: "56 MBs", icon: Icons.menu_book, iconColor: 'ff6B4EFF',),
-              //       BookCard(title: "Academic", fileCount: "50 Notes", size: "2.26 GB", icon: Icons.lightbulb, iconColor: 'FF9990FF'),
-              //       BookCard(title: "Work", fileCount: "25 Notes", size: "1.57 GB", icon: Icons.person, iconColor: 'FFF0B27A'),
-              //       BookCard(title: "Others", fileCount: "5 Notes", size: "1.02 GB", icon: Icons.insert_drive_file, iconColor: 'FFDF8DE1'),
-              //       BookCard(title: "Personal", fileCount: "15 Notes", size: "56 MBs", icon: Icons.menu_book, iconColor: 'ff6B4EFF',),
-              //       BookCard(title: "Academic", fileCount: "50 Notes", size: "2.26 GB", icon: Icons.lightbulb, iconColor: 'FF9990FF'),
-              //       BookCard(title: "Work", fileCount: "25 Notes", size: "1.57 GB", icon: Icons.person, iconColor: 'FFF0B27A'),
-              //       BookCard(title: "Others", fileCount: "5 Notes", size: "1.02 GB", icon: Icons.insert_drive_file, iconColor: 'FFDF8DE1'),
-              //     ],
-              //   ),
-              // )
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -119,54 +127,54 @@ class NoteDashboardScreen extends StatelessWidget {
 
   Container Banner() {
     return Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFF6759F3),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: Offset(0, 10),
-                  ),
-                ],
+      width: double.infinity,
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Color(0xFF6759F3),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepPurple.withOpacity(0.3),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(Icons.pie_chart, color: Colors.white, size: 32),
+          ),
+          SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                "Your Smart Notes",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(Icons.pie_chart, color: Colors.white, size: 32),
-                  ),
-                  SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        "Your Smart Notes",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        "Everything is neatly organized.",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              SizedBox(height: 4),
+              Text(
+                "Everything is neatly organized.",
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 10,
+                ),
               ),
-            );
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _navDrawer(BuildContext context) {
@@ -225,9 +233,8 @@ class NoteDashboardScreen extends StatelessWidget {
             title: Text('Profile'),
             onTap: () {
               Navigator.pushNamed(
-                  context,  AppRoutes.accRoute
+                  context, AppRoutes.accRoute
               );
-
             },
           ),
           ListTile(
@@ -238,7 +245,7 @@ class NoteDashboardScreen extends StatelessWidget {
             title: Text('Note Books'),
             onTap: () {
               Navigator.pushNamed(
-                  context,  AppRoutes.categoryRoute
+                  context, AppRoutes.categoryRoute
               );
             },
           ),
@@ -250,9 +257,8 @@ class NoteDashboardScreen extends StatelessWidget {
             title: Text('Change Password'),
             onTap: () {
               Navigator.pushNamed(
-                  context,  AppRoutes.changepass
+                  context, AppRoutes.changepass
               );
-
             },
           ),
           ListTile(
@@ -263,13 +269,13 @@ class NoteDashboardScreen extends StatelessWidget {
             title: Text('Logout'),
             onTap: () {
               // Clear user data and token
-             HiveManager.clearUserData();
-              
+              HiveManager.clearUserData();
+
               // Clear navigation stack and go to login
               Navigator.pushNamedAndRemoveUntil(
                 context,
                 AppRoutes.loginRoute,
-                (route) => false,
+                    (route) => false,
               );
             },
           ),
@@ -277,7 +283,6 @@ class NoteDashboardScreen extends StatelessWidget {
       ),
     );
   }
-
 }
 
 

@@ -214,7 +214,7 @@ class _ApiService implements ApiService {
     )
         .compose(
           _dio.options,
-          'api/category/getUserCats',
+          'api/category/GetUserNotesCats',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -250,7 +250,7 @@ class _ApiService implements ApiService {
     )
         .compose(
           _dio.options,
-          'api/Category/addOrUpdateCat',
+          'api/Category/addOrUpdateNoteCat',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -284,7 +284,114 @@ class _ApiService implements ApiService {
     )
         .compose(
           _dio.options,
-          'api/category/delCat',
+          'api/category/delNoteCat',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponseModel _value;
+    try {
+      _value = BaseResponseModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
+  }
+
+  @override
+  Future<HttpResponse<GetNotesResModel>> getUserNotes(
+      {required PaginationReqModel req}) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(req.toJson());
+    final _options = _setStreamType<HttpResponse<GetNotesResModel>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'api/note/GetUserNotes',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late GetNotesResModel _value;
+    try {
+      _value = GetNotesResModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
+  }
+
+  @override
+  Future<HttpResponse<BaseResponseModel>> addOrUpdateNote(
+      {required NoteDataModel req}) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(req.toJson());
+    final _options = _setStreamType<HttpResponse<BaseResponseModel>>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'api/note/addOrUpdateNote',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponseModel _value;
+    try {
+      _value = BaseResponseModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    final httpResponse = HttpResponse(_value, _result);
+    return httpResponse;
+  }
+
+  @override
+  Future<HttpResponse<BaseResponseModel>> deleteNote(
+      {required int noteId}) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'noteId': noteId};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<HttpResponse<BaseResponseModel>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'api/Note/delNote',
           queryParameters: queryParameters,
           data: _data,
         )
