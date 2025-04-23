@@ -56,4 +56,7 @@ class DateUtil {
   static String getCurrentDateTime() {
     return DateFormat('MMM dd, yyyy hh:mm a').format(DateTime.now());
   }
+  static String getServerFormateCurrentDateTime() {
+    return DateFormat('yyyy-MM-dd').format(DateTime.now());
+  }
 } 

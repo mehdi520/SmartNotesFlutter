@@ -78,7 +78,7 @@ class _AddUpdateNoteScreenState extends State<AddUpdateNoteScreen> {
         userId: user!.id!,
         title: _titleController.text,
         details: _contentController.text,
-        createdAt: widget.note?.createdAt ?? DateUtil.getCurrentDateTime()
+        createdAt: widget.note?.createdAt ??  DateUtil.getServerFormateCurrentDateTime()
       );
       context.read<NoteBloc>().add(AddUpdateNoteEvent(req: req));
     }

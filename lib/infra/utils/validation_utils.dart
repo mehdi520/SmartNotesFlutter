@@ -10,7 +10,7 @@ class ValidationUtils {
     // This regex allows for international phone numbers
     // It accepts formats like: +1234567890, 1234567890, (123) 456-7890
     final phoneRegex = RegExp(
-      r'^(\+\d{1,3}[- ]?)?\d{10}$',
+      r'^(\+\d{1,3}[- ]?)?\d{11}$',
     );
     return phoneRegex.hasMatch(phone);
   }
