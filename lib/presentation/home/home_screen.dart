@@ -91,7 +91,11 @@ class _NoteDashboardContent extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     // Available Space Card
-                    Banner(),
+                    InkWell(
+                        onTap: (){
+                          context.read<CatBloc>().add(GetCatEvent());
+                        },
+                        child: Banner()),
                     const SizedBox(height: 24),
 
                     Expanded(
@@ -107,7 +111,7 @@ class _NoteDashboardContent extends StatelessWidget {
                           final book = state.cats![index];
                           return BookCard(
                             title: book.title.toString(),
-                            fileCount: book.userId.toString() + "Notes",
+                            fileCount: book.totalNotes.toString() + (book.totalNotes > 1 ? " Notes" : " Note"),
                             icon: Icons.menu_book,
                             iconColor: book.iconColor.toString(),
                             noteBookId: book.noteBookId, cat: book,
@@ -164,7 +168,7 @@ class _NoteDashboardContent extends StatelessWidget {
               ),
               SizedBox(height: 4),
               Text(
-                "Everything is neatly organized.",
+                "Click here to sync your notes.",
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 10,

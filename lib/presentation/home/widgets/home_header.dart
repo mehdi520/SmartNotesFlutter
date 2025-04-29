@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../infra/core/core_exports.dart';
+import '../../../presentation/blocs/cat_bloc/cat_bloc.dart';
 
 class Header extends StatelessWidget {
   final String userName;
@@ -9,6 +11,8 @@ class Header extends StatelessWidget {
     Key? key,
     required this.userName,
   }) : super(key: key);
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +38,7 @@ class Header extends StatelessWidget {
           ],
         ),
         Spacer(),
+
         SizedBox(width: 12),
         InkWell(
             onTap: (){

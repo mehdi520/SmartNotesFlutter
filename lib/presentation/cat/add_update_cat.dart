@@ -27,6 +27,7 @@ class AddUpdateCat extends StatelessWidget {
       var user = HiveManager.getUserJson();
       var state = context.read<CatBloc>().state;
       var req = CatModel(
+        totalNotes: 0,
         noteBookId: 0,
         userId: user!.id!,
         title: _emailController.text,

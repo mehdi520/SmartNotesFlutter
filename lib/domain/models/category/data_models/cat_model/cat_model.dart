@@ -7,6 +7,7 @@ class CatModel extends Equatable{
   final String? title;
   final String? iconColor;
   final int userId;
+  final int totalNotes;
 
 
 
@@ -14,7 +15,8 @@ class CatModel extends Equatable{
     required this.noteBookId,
     this.title,
     required this.userId,
-    this.iconColor
+    this.iconColor,
+    required this.totalNotes
   });
 
   factory CatModel.fromJson(Map<String, dynamic> json) => _$CatModelFromJson(json);

@@ -13,6 +13,7 @@ NoteDataModel _$NoteDataModelFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String?,
       userId: (json['userId'] as num).toInt(),
       details: json['details'] as String?,
+      noteBookName: json['noteBookName'] as String?,
       createdAt: json['createdAt'] as String?,
     );
 
@@ -24,4 +25,5 @@ Map<String, dynamic> _$NoteDataModelToJson(NoteDataModel instance) =>
       'details': instance.details,
       'userId': instance.userId,
       'createdAt': instance.createdAt,
+      'noteBookName': instance.noteBookName,
     };

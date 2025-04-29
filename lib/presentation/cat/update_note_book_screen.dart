@@ -28,6 +28,7 @@ class UpdateNoteBookScreen extends StatelessWidget {
       var user = HiveManager.getUserJson();
       var state = context.read<CatBloc>().state;
       var req = CatModel(
+        totalNotes: 0,
         noteBookId: cat.noteBookId,
         userId: user!.id!,
         title: _titleController.text,

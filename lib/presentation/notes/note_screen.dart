@@ -126,7 +126,7 @@ class _NoteScreenState extends State<NoteScreen> {
                   final note = state.notes[index];
                   return NoteCard(
                     title: note.title!,
-                    category: "Category",
+                    category: note.noteBookName.toString(),
                     date: note.createdAt!,
                     content: note.details!,
                     onTap: () {

@@ -9,6 +9,7 @@ class NoteDataModel extends Equatable{
   final String? details;
   final int userId;
   final String? createdAt;
+  final String? noteBookName;
 
 
 
@@ -18,6 +19,7 @@ class NoteDataModel extends Equatable{
     this.title,
     required this.userId,
     this.details,
+    this.noteBookName,
     this.createdAt
   });
 

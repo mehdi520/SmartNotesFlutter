@@ -55,13 +55,18 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   hive_generator: ^2.0.1
   build_runner: ^2.4.6
+  flutter_launcher_icons: ^0.13.1
+
 
   retrofit_generator: ^9.1.9
   json_serializable: ^6.6.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
-
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  android: true
+  ios: false
 # The following section is specific to Flutter packages.
 flutter:
 

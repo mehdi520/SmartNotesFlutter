@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_book/presentation/blocs/user_bloc/user_bloc.dart';
 import 'package:note_book/presentation/pub/splash/bloc/splash_cubit.dart';
 
-import '../infra/core/core_exports.dart';
-import '../infra/di/service_locator.dart';
+import 'infra/core/core_exports.dart';
+import 'infra/di/service_locator.dart';
 
 
 Future<void> main() async {
