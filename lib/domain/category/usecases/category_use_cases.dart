@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+cimport 'package:dartz/dartz.dart';
 import 'package:note_book/domain/category/contract/category_repository.dart';
 import 'package:note_book/domain/models/category/data_models/cat_model/cat_model.dart';
 
