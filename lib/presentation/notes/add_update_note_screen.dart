@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_book/data/data_sources/local/HiveManager.dart';
 import 'package:note_book/domain/models/note/data_model/note_data_model.dart';
-import 'package:note_book/domain/models/note/req_models/pagination_req_model.dart';
+import 'package:note_book/domain/models/note/data_model/picked_file_model.dart';
 import 'package:note_book/infra/extensions/media_query_extension.dart';
 import 'package:note_book/infra/loader/overlay_service.dart';
+import 'package:note_book/infra/pdf/pdf_download_helper.dart';
 import 'package:note_book/infra/utils/date_utils.dart';
 import 'package:note_book/infra/utils/enums.dart';
 import 'package:note_book/infra/utils/toast_utils.dart';
+import 'package:note_book/presentation/blocs/attachment_cubit/attachment_cubit.dart';
 import 'package:note_book/presentation/blocs/note_bloc/note_bloc.dart';
+import 'package:note_book/presentation/notes/widgets/attachments_section.dart';
 
 import '../../infra/common/common_widgets/app_bars/basic_app_bar.dart';
 import '../../infra/common/common_widgets/buttons/PrimaryButton.dart';
-import '../../infra/common/common_widgets/input_fields/TextInputFormField.dart';
-import '../../infra/common/common_widgets/text_fields/CommonTextField.dart';
 
 class AddUpdateNoteScreen extends StatefulWidget {
   final int noteBookId;
@@ -26,9 +27,13 @@ class AddUpdateNoteScreen extends StatefulWidget {
 
 class _AddUpdateNoteScreenState extends State<AddUpdateNoteScreen> {
   final OverlayService _loadingService = OverlayService();
-  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
   late final TextEditingController _contentController;
+
+  /// Files picked for a new note; uploaded right after the note is saved.
+  List<PickedFileModel> _pendingFiles = [];
+
+  bool get _isEdit => widget.note != null;
 
   @override
   void initState() {
@@ -39,6 +44,7 @@ class _AddUpdateNoteScreenState extends State<AddUpdateNoteScreen> {
 
   @override
   void dispose() {
+    _loadingService.hideLoadingOverlay();
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
@@ -50,7 +56,8 @@ class _AddUpdateNoteScreenState extends State<AddUpdateNoteScreen> {
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Delete Note'),
-          content: const Text('Are you sure you want to delete this note? This action cannot be undone.'),
+          content: const Text(
+              'Are you sure you want to delete this note and all its attachments? This action cannot be undone.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -70,36 +77,51 @@ class _AddUpdateNoteScreenState extends State<AddUpdateNoteScreen> {
   }
 
   void _submitNote(BuildContext context) {
-    if (_formKey.currentState!.validate()) {
-      var user = HiveManager.getUserJson();
-      var req = NoteDataModel(
-        noteId: widget.note?.noteId ?? 0,
-        noteBookId: widget.noteBookId,
-        userId: user!.id!,
-        title: _titleController.text,
-        details: _contentController.text,
-        noteBookName: 'no need for this',
-        createdAt: widget.note?.createdAt ??  DateUtil.getServerFormateCurrentDateTime()
-      );
-      context.read<NoteBloc>().add(AddUpdateNoteEvent(req: req));
+    if (_titleController.text.trim().isEmpty) {
+      ToastUtils.showError('Title is required');
+      return;
     }
+    final user = HiveManager.getUserJson();
+    final req = NoteDataModel(
+      noteId: widget.note?.noteId ?? 0,
+      noteBookId: widget.noteBookId,
+      userId: user?.id ?? 0,
+      title: _titleController.text.trim(),
+      details: _contentController.text,
+      createdAt: widget.note?.createdAt ?? DateUtil.getServerFormateCurrentDateTime(),
+    );
+    context.read<NoteBloc>().add(AddUpdateNoteEvent(req: req, files: _isEdit ? const [] : _pendingFiles));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: BasicAppBar(title: widget.note == null ? "New Note" : "Update Note"),
+    final body = Scaffold(
+      appBar: BasicAppBar(
+        title: _isEdit ? "Update Note" : "New Note",
+        actions: [
+          if (_isEdit)
+            IconButton(
+              tooltip: 'Download PDF',
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              onPressed: () => PdfDownloadHelper.note(context, widget.note!.noteId),
+            ),
+        ],
+      ),
       body: BlocListener<NoteBloc, NoteState>(
-        listenWhen:
-            (previous, current) => current.apiIdentifier == "add_update_note" || current.apiIdentifier == "delete_note",
+        listenWhen: (previous, current) =>
+            current.apiIdentifier == "add_update_note" || current.apiIdentifier == "delete_note",
         listener: (context, state) {
           if (state.apiStatus == ApiStatus.loading) {
             _loadingService.showLoadingOverlay(context);
           }
-          print("state " + state.apiStatus.toString());
           if (state.apiStatus == ApiStatus.success) {
             _loadingService.hideLoadingOverlay();
-            context.read<NoteBloc>().add(GetNotesEvent(req: PaginationReqModel(pageNo: 1, pageSize: 10,categoryId: widget.noteBookId)));
+            final msg = state.resp?.message ?? '';
+            if (msg.contains('failed')) {
+              ToastUtils.showError(msg);
+            } else if (msg.isNotEmpty) {
+              ToastUtils.showSuccess(msg);
+            }
             Navigator.pop(context);
           }
           if (state.apiStatus == ApiStatus.error) {
@@ -107,90 +129,98 @@ class _AddUpdateNoteScreenState extends State<AddUpdateNoteScreen> {
             ToastUtils.showError(state.resp?.message ?? ' failed');
           }
         },
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.mediaQueryWidth * 0.09,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Center(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: context.mediaQueryWidth * 0.05),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: _titleController,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
-                      hintText: widget.note == null ? "Enter note title here" : "Update note title",
-                      border: UnderlineInputBorder(),
+                      hintText: _isEdit ? "Update note title" : "Enter note title here",
+                      border: const UnderlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       Text(
-                        widget.note == null 
-                            ? DateUtil.getCurrentDate() 
-                            : DateUtil.getDateFromServerDate(widget.note?.createdAt),
+                        _isEdit ? DateUtil.getDateFromServerDate(widget.note?.createdAt) : DateUtil.getCurrentDate(),
                         style: const TextStyle(color: Colors.grey),
                       ),
                       const SizedBox(width: 16),
                       Text(
-                        widget.note == null 
-                            ? DateUtil.getCurrentTime() 
-                            : DateUtil.getTimeFromServerDate(widget.note?.createdAt),
+                        _isEdit ? DateUtil.getTimeFromServerDate(widget.note?.createdAt) : DateUtil.getCurrentTime(),
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   Expanded(
                     child: SingleChildScrollView(
-                      child: TextField(
-                        controller: _contentController,
-                        maxLines: null,
-                        expands: false,
-                        keyboardType: TextInputType.multiline,
-                        decoration: InputDecoration(
-                          hintText: widget.note == null ? "Enter your note details here" : "Update your note details",
-                          border: InputBorder.none,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            controller: _contentController,
+                            maxLines: null,
+                            minLines: 6,
+                            keyboardType: TextInputType.multiline,
+                            decoration: InputDecoration(
+                              hintText: _isEdit ? "Update your note details" : "Enter your note details here",
+                              border: InputBorder.none,
+                            ),
+                          ),
+                          const Divider(),
+                          if (_isEdit)
+                            const SavedAttachmentsSection()
+                          else
+                            PendingAttachmentsSection(
+                              files: _pendingFiles,
+                              onChanged: (files) => setState(() => _pendingFiles = files),
+                            ),
+                          const SizedBox(height: 12),
+                        ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 30),
-                  Builder(
-                    builder: (context) {
-                      return Column(
-                        children: [
+                  const SizedBox(height: 12),
+                  Builder(builder: (context) {
+                    return Column(
+                      children: [
+                        PrimaryButton(
+                          text: _isEdit ? 'Update' : 'Save',
+                          onTap: () => _submitNote(context),
+                        ),
+                        if (_isEdit) ...[
+                          const SizedBox(height: 10),
                           PrimaryButton(
-                            text: widget.note == null ? 'Save' : 'Update',
-                            onTap: () => _submitNote(context)
+                            text: 'Delete',
+                            bgColor: Colors.red,
+                            onTap: () => _showDeleteConfirmation(context, context.read<NoteBloc>()),
                           ),
-                          if (widget.note != null) ...[
-                            SizedBox(height: 10),
-                            PrimaryButton(
-                              text: 'Delete',
-                              bgColor: Colors.red,
-                              onTap: () => _showDeleteConfirmation(context, context.read<NoteBloc>()),
-                            ),
-                          ],
                         ],
-                      );
-                    }
-                  ),
-                  SizedBox(height: 20),
+                      ],
+                    );
+                  }),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+
+    if (!_isEdit) return body;
+    return BlocProvider(
+      create: (_) => AttachmentCubit(widget.note!.noteId)..load(),
+      child: body,
     );
   }
 }

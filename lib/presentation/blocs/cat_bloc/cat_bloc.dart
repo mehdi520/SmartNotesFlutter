@@ -3,7 +3,9 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:note_book/domain/category/usecases/category_use_cases.dart';
 import 'package:note_book/domain/models/category/data_models/cat_model/cat_model.dart';
+import 'package:note_book/domain/models/category/response_models/get_user_cats_res_model/get_user_cats_res_model.dart';
 import 'package:note_book/domain/models/common_models/base_response_model.dart';
+import 'package:note_book/domain/models/common_models/page_info.dart';
 import 'package:note_book/infra/di/service_locator.dart';
 import 'package:note_book/infra/utils/enums.dart';
 
@@ -20,10 +22,22 @@ class CatBloc extends Bloc<CatEvent, CatState> {
     on<DeleteCatEvent>(_onDeleteNoteBook);
   }
 
+  /// Ignores late responses of older requests (e.g. while typing a search).
+  int _requestId = 0;
+
+  /// Loads a page of notebooks. Without arguments it reloads the current page / search.
   void _onGetCats (GetCatEvent event, Emitter<CatState> emit) async {
-    emit(state.copyWith(apiStatus: ApiStatus.loading,apiIdentifier: "get_cat"));
+    final requestId = ++_requestId;
+    final search = event.search ?? state.search;
+    final page = event.pageNo ?? state.pageInfo.currentPage;
+    emit(state.copyWith(apiStatus: ApiStatus.loading,apiIdentifier: "get_cat", search: search));
     try {
-      Either returnedData = await categoryUseCases.getCats();
+      Either returnedData = await categoryUseCases.getCats(
+        pageNo: page < 1 ? 1 : page,
+        pageSize: state.pageSize,
+        search: search.isEmpty ? null : search,
+      );
+      if (requestId != _requestId) return;
       returnedData.fold(
             (error) {
           print(error);
@@ -41,6 +55,8 @@ class CatBloc extends Bloc<CatEvent, CatState> {
             apiStatus: ApiStatus.success,
             resp: BaseResponseModel(status: true, message: ""),
             cats: data.data,
+            pageInfo: (data as GetUserCatsResModel).pageInfo,
+            loaded: true,
               apiIdentifier: "get_cat"
           ));
           // Reset to initial after success

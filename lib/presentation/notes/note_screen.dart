@@ -1,203 +1,147 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:note_book/domain/models/note/req_models/pagination_req_model.dart';
+import 'package:note_book/domain/models/note/data_model/note_data_model.dart';
+import 'package:note_book/infra/common/common_widgets/pagination/pagination_bar.dart';
+import 'package:note_book/infra/common/common_widgets/search/app_search_field.dart';
 import 'package:note_book/infra/extensions/media_query_extension.dart';
-import 'package:note_book/infra/utils/date_utils.dart';
+import 'package:note_book/infra/pdf/pdf_download_helper.dart';
 import 'package:note_book/infra/utils/enums.dart';
+import 'package:note_book/infra/utils/toast_utils.dart';
 import 'package:note_book/presentation/blocs/note_bloc/note_bloc.dart';
+import 'package:note_book/presentation/notes/widgets/note_card.dart';
 import '../../infra/common/common_widgets/app_bars/basic_app_bar.dart';
 import '../../infra/core/core_exports.dart';
 
-class NoteScreen extends StatefulWidget {
+/// Notes of one notebook: search, page bar (page X of Y, total notes),
+/// PDF for one note or the whole notebook.
+class NoteScreen extends StatelessWidget {
   final int noteBookId;
+  final String? noteBookTitle;
 
-  NoteScreen({super.key, required this.noteBookId});
+  const NoteScreen({super.key, required this.noteBookId, this.noteBookTitle});
 
-  @override
-  State<NoteScreen> createState() => _NoteScreenState();
-}
-
-class _NoteScreenState extends State<NoteScreen> {
-  final ScrollController _scrollController = ScrollController();
-  NoteBloc? _noteBloc;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll(BuildContext context) {
-    if (_noteBloc == null) return;
-    
-    final state = _noteBloc!.state;
-
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 100 &&
-        !state.hasReachedMax &&
-        state.apiStatus != ApiStatus.loading) {
-      
-      final currentPage = (state.notes.length / 10).ceil();
-      final nextPage = currentPage + 1;
-
-      if (nextPage <= state.totalPage) {
-        _noteBloc!.add(GetNotesEvent(
-          req: PaginationReqModel(
-            pageNo: nextPage,
-            pageSize: 10,
-            categoryId: widget.noteBookId,
-          ),
-        ));
-      }
-    }
-  }
+  static const int pageSize = 10;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) {
-        final bloc = NoteBloc()
-          ..add(GetNotesEvent(
-            req: PaginationReqModel(
-              pageNo: 1,
-              pageSize: 10,
-              categoryId: widget.noteBookId,
-            ),
-          ));
-        _noteBloc = bloc;
-        _scrollController.addListener(() => _onScroll(context));
-        return bloc;
-      },
-      child: Scaffold(
-        appBar: BasicAppBar(title: "Notes"),
-        floatingActionButton: BlocBuilder<NoteBloc, NoteState>(
-          builder: (context, state) {
-            return FloatingActionButton(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.white,
-              child: Icon(Icons.add, size: 32),
-              onPressed: () {
-                final bloc = context.read<NoteBloc>();
-                Navigator.pushNamed(context, AppRoutes.addnote, arguments: {
-                  'bloc': bloc,
-                  'noteId': widget.noteBookId,
-                });
-              },
-            );
-          },
-        ),
-        body: BlocBuilder<NoteBloc, NoteState>(
-          builder: (context, state) {
-            if (state.apiStatus == ApiStatus.loading && state.notes.isEmpty) {
-              return Center(child: CircularProgressIndicator());
-            }
-
-            if (state.notes.isEmpty) {
-              return Center(child: Text('No notes found'));
-            }
-
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.mediaQueryWidth * 0.09,
-              ),
-              child: ListView.separated(
-                controller: _scrollController,
-                padding: EdgeInsets.only(top: 20),
-                itemCount: state.notes.length + (state.hasReachedMax ? 0 : 1),
-                separatorBuilder: (_, __) => SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  if (index >= state.notes.length) {
-                    if (state.apiStatus == ApiStatus.loading) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }
-
-                  final note = state.notes[index];
-                  return NoteCard(
-                    title: note.title!,
-                    category: note.noteBookName.toString(),
-                    date: note.createdAt!,
-                    content: note.details!,
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.addnote, arguments: {
-                        'bloc': _noteBloc,
-                         'noteId': widget.noteBookId,
-                        'note': note,
-                      });
-                    },
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      ),
+      create: (_) => NoteBloc(categoryId: noteBookId, pageSize: pageSize)..add(RefreshNotesEvent()),
+      child: _NoteScreenBody(noteBookId: noteBookId, title: noteBookTitle ?? 'Notes'),
     );
   }
 }
 
-class NoteCard extends StatelessWidget {
+class _NoteScreenBody extends StatelessWidget {
+  final int noteBookId;
   final String title;
-  final String category;
-  final String date;
-  final String content;
-  final VoidCallback onTap;
 
-  const NoteCard({
-    super.key,
-    required this.title,
-    required this.category,
-    required this.date,
-    required this.content,
-    required this.onTap,
-  });
+  const _NoteScreenBody({required this.noteBookId, required this.title});
+
+  Future<void> _openNote(BuildContext context, {NoteDataModel? note}) async {
+    final bloc = context.read<NoteBloc>();
+    await Navigator.pushNamed(context, AppRoutes.addnote, arguments: {
+      'bloc': bloc,
+      'noteId': noteBookId,
+      if (note != null) 'note': note,
+    });
+    // Refresh counts / titles / attachments after coming back.
+    bloc.add(RefreshNotesEvent());
+  }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Scaffold(
+      appBar: BasicAppBar(
+        title: title,
+        actions: [
+          IconButton(
+            tooltip: 'Download all notes as PDF',
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () => PdfDownloadHelper.noteBook(context, noteBookId),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        child: const Icon(Icons.add, size: 32),
+        onPressed: () => _openNote(context),
+      ),
+      body: BlocListener<NoteBloc, NoteState>(
+        listenWhen: (p, c) => c.apiIdentifier == "get_notes" && c.apiStatus == ApiStatus.error,
+        listener: (context, state) => ToastUtils.showError(state.resp?.message ?? 'Failed to load notes'),
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: EdgeInsets.symmetric(horizontal: context.mediaQueryWidth * 0.05),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: Column(
                 children: [
-                  Text(category,
-                      style: TextStyle(color: Colors.grey.shade600)),
-                  Text(
-                    DateUtil.getDateFromServerDate(date),
-                    style: TextStyle(color: Colors.grey.shade600),
+                  const SizedBox(height: 16),
+                  AppSearchField(
+                    hint: 'Search notes in $title',
+                    onChanged: (v) => context.read<NoteBloc>().add(SearchNotesEvent(v)),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: BlocBuilder<NoteBloc, NoteState>(
+                      builder: (context, state) {
+                        final loading = state.apiStatus == ApiStatus.loading;
+                        if (!state.loaded && loading) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (state.notes.isEmpty) {
+                          return Center(
+                            child: Text(
+                              state.search.isEmpty ? 'No notes yet. Tap + to add one.' : 'No notes match "${state.search}"',
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }
+                        return Stack(
+                          children: [
+                            RefreshIndicator(
+                              onRefresh: () async => context.read<NoteBloc>().add(RefreshNotesEvent()),
+                              child: ListView.separated(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.only(bottom: 12),
+                                itemCount: state.notes.length,
+                                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                itemBuilder: (context, index) {
+                                  final note = state.notes[index];
+                                  return NoteCard(
+                                    title: note.title ?? '',
+                                    category: note.noteBookName ?? '',
+                                    date: note.createdAt ?? '',
+                                    content: note.details ?? '',
+                                    attachmentCount: note.attachmentCount,
+                                    onTap: () => _openNote(context, note: note),
+                                    onDownload: () => PdfDownloadHelper.note(context, note.noteId),
+                                  );
+                                },
+                              ),
+                            ),
+                            if (loading) const LinearProgressIndicator(minHeight: 2),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  BlocBuilder<NoteBloc, NoteState>(
+                    buildWhen: (p, c) => p.pageInfo != c.pageInfo || p.apiStatus != c.apiStatus,
+                    builder: (context, state) => Padding(
+                      // leave room for the + button
+                      padding: const EdgeInsets.only(top: 8, bottom: 12, right: 64),
+                      child: PaginationBar(
+                        pageInfo: state.pageInfo,
+                        enabled: state.apiStatus != ApiStatus.loading,
+                        onPageChanged: (p) => context.read<NoteBloc>().add(ChangeNotesPageEvent(p)),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                content,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 14),
-              ),
-            ],
+            ),
           ),
         ),
       ),

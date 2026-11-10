@@ -96,9 +96,9 @@ class CategoryRepositoryImpl extends CategoryRepository {
   }
 
   @override
-  Future<Either> getCategories() async {
+  Future<Either> getCategories({int pageNo = 0, int pageSize = 10, String? search}) async {
     try {
-      final httpResponse = await _apiService.getUserCats();
+      final httpResponse = await _apiService.getUserCats(pageNo: pageNo, pageSize: pageSize, search: search);
 
       if (httpResponse.response.statusCode == HttpStatus.ok) {
         print(httpResponse.response);

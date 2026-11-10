@@ -44,8 +44,13 @@ abstract class ApiService {
     @Body() required PassChangeReqModel req,
   });
 
+  /// pageNo = 0 returns all notebooks; search filters by title.
   @GET('api/category/GetUserNotesCats')
-  Future<HttpResponse<GetUserCatsResModel>> getUserCats();
+  Future<HttpResponse<GetUserCatsResModel>> getUserCats({
+    @Query('pageNo') int pageNo = 0,
+    @Query('pageSize') int pageSize = 10,
+    @Query('search') String? search,
+  });
 
   @POST('api/Category/addOrUpdateNoteCat')
   Future<HttpResponse<BaseResponseModel>> addOrUpdateCat({

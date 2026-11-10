@@ -46,6 +46,14 @@ dependencies:
   dartz:
   fluttertoast: ^8.2.1
   intl:
+  # Attachments (pick single/multiple files on web, Android, iOS)
+  file_picker: ^8.1.2
+  # PDF generation for a note / a whole notebook
+  pdf: ^3.11.1
+  # Save/share files on Android & iOS (web uses a browser download)
+  share_plus: ^10.1.4
+  # Browser download on web
+  web: ^1.1.0
 
 
 

@@ -11,6 +11,7 @@ PaginationReqModel _$PaginationReqModelFromJson(Map<String, dynamic> json) =>
       pageNo: (json['pageNo'] as num).toInt(),
       pageSize: (json['pageSize'] as num).toInt(),
       categoryId: (json['categoryId'] as num?)?.toInt(),
+      search: json['search'] as String?,
     );
 
 Map<String, dynamic> _$PaginationReqModelToJson(PaginationReqModel instance) =>
@@ -18,4 +19,5 @@ Map<String, dynamic> _$PaginationReqModelToJson(PaginationReqModel instance) =>
       'pageNo': instance.pageNo,
       'pageSize': instance.pageSize,
       'categoryId': instance.categoryId,
+      'search': instance.search,
     };

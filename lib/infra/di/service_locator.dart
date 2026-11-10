@@ -17,6 +17,8 @@ import 'package:note_book/infra/network/interceptors/auth_interceptor.dart';
 import 'package:note_book/infra/network/interceptors/logging_interceptor.dart';
 
 import '../../data/data_sources/remote/api_service.dart';
+import '../../data/data_sources/remote/note_files_api.dart';
+import '../pdf/note_pdf_service.dart';
 import '../../data/repository/auth/auth_repository_impl.dart';
 import '../../domain/auth/contract/auth_repository.dart';
 import '../../domain/auth/usecases/login_usecase.dart';
@@ -64,12 +66,13 @@ Future<void> initializedDepencies() async {
 
   // Remote Api Services
   sl.registerSingleton(ApiService(sl()));
+  sl.registerSingleton<NoteFilesApi>(NoteFilesApi(sl()));
 
   // repositories
   sl.registerSingleton<AuthRepository>(AuthRepositoryImpl(sl()));
   sl.registerSingleton<UserRepository>(UserRepositoryImpl(sl()));
   sl.registerSingleton<CategoryRepository>(CategoryRepositoryImpl(sl()));
-  sl.registerSingleton<NoteRepository>(NoteRepositoryImpl(sl()));
+  sl.registerSingleton<NoteRepository>(NoteRepositoryImpl(sl(), sl()));
 
 
   // usecases
@@ -80,5 +83,8 @@ Future<void> initializedDepencies() async {
   sl.registerSingleton<ChangePasswordUsecase>(ChangePasswordUsecase(sl()));
   sl.registerSingleton<CategoryUseCases>(CategoryUseCases(sl()));
   sl.registerSingleton<NoteUsecase>(NoteUsecase(sl()));
+
+  // services
+  sl.registerSingleton<NotePdfService>(NotePdfService(sl()));
 
 }

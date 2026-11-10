@@ -44,8 +44,11 @@ class AppRoutes{
       case changepass:
         return MaterialPageRoute(builder: (context) => ChangePassScreen());
       case note:
-        final noteBookId = settings.arguments as int;
-        return MaterialPageRoute(builder: (context) => NoteScreen(noteBookId: noteBookId,));
+        // arguments: int noteBookId, or {'noteBookId': int, 'title': String}
+        final args = settings.arguments;
+        final noteBookId = args is Map ? args['noteBookId'] as int : args as int;
+        final title = args is Map ? args['title'] as String? : null;
+        return MaterialPageRoute(builder: (context) => NoteScreen(noteBookId: noteBookId, noteBookTitle: title));
       case categoryRoute:
         final bloc = settings.arguments as CatBloc;
         return MaterialPageRoute(

@@ -7,8 +7,8 @@ class CategoryUseCases {
 
   CategoryUseCases(this._repository);
 
-  Future<Either> getCats() async {
-    return await _repository.getCategories();
+  Future<Either> getCats({int pageNo = 0, int pageSize = 10, String? search}) async {
+    return await _repository.getCategories(pageNo: pageNo, pageSize: pageSize, search: search);
   }
 
   Future<Either> addOrUpdateCat(CatModel req) async {

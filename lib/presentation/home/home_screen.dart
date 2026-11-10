@@ -1,27 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:note_book/domain/models/category/data_models/cat_model/cat_model.dart';
+import 'package:note_book/infra/common/common_widgets/pagination/pagination_bar.dart';
+import 'package:note_book/infra/common/common_widgets/search/app_search_field.dart';
 import 'package:note_book/infra/core/core_exports.dart';
 import 'package:note_book/infra/extensions/media_query_extension.dart';
 import 'package:note_book/infra/loader/overlay_service.dart';
+import 'package:note_book/infra/pdf/pdf_download_helper.dart';
 import 'package:note_book/infra/utils/enums.dart';
 import 'package:note_book/infra/utils/toast_utils.dart';
 import 'package:note_book/presentation/blocs/cat_bloc/cat_bloc.dart';
+import 'package:note_book/presentation/blocs/note_bloc/note_bloc.dart';
 import 'package:note_book/presentation/blocs/user_bloc/user_bloc.dart';
 import 'package:note_book/presentation/home/widgets/book_card.dart';
 import 'package:note_book/data/data_sources/local/HiveManager.dart';
+import 'package:note_book/presentation/notes/widgets/note_card.dart';
 
 import 'widgets/home_header.dart';
 
 class NoteDashboardScreen extends StatelessWidget {
   final OverlayService _loadingService = OverlayService();
 
-
+  NoteDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => CatBloc()..add(GetCatEvent()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => CatBloc()..add(GetCatEvent(pageNo: 1))),
+        // Notes search across all notebooks (only used while searching).
+        BlocProvider(create: (context) => NoteBloc(categoryId: 0, pageSize: 5)),
+      ],
       child: _NoteDashboardContent(
         loadingService: _loadingService,
       ),
@@ -36,6 +44,13 @@ class _NoteDashboardContent extends StatelessWidget {
   const _NoteDashboardContent({
     required this.loadingService,
   });
+
+  void _onSearch(BuildContext context, String text) {
+    context.read<CatBloc>().add(GetCatEvent(pageNo: 1, search: text));
+    if (text.isNotEmpty) {
+      context.read<NoteBloc>().add(SearchNotesEvent(text));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +73,8 @@ class _NoteDashboardContent extends StatelessWidget {
         child: BlocListener<CatBloc, CatState>(
           listenWhen: (previous, current) => current.apiIdentifier == "get_cat",
           listener: (context, state) {
-            print("home state "  + state.apiStatus.toString());
-
-            if (state.apiStatus == ApiStatus.loading) {
+            // Full-screen loader only for the first load; paging/search show a thin bar instead.
+            if (state.apiStatus == ApiStatus.loading && !state.loaded) {
               loadingService.showLoadingOverlay(context);
             }
 
@@ -72,62 +86,119 @@ class _NoteDashboardContent extends StatelessWidget {
               ToastUtils.showError(state.resp?.message ?? ' failed');
             }
           },
-          child: BlocBuilder<CatBloc, CatState>(
-            builder: (context, state) {
-              return Padding(
-                padding: EdgeInsets.symmetric(
-                    horizontal: context.mediaQueryWidth * 0.09,
-                    vertical: context.mediaQueryHeight * 0.01),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    BlocBuilder<UserBloc, UserState>(
-                      builder: (context, state) {
-                        final user = state.user ?? HiveManager.getUserJson();
-                        return Header(userName: user?.name ?? '');
-                      },
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Available Space Card
-                    InkWell(
-                        onTap: (){
-                          context.read<CatBloc>().add(GetCatEvent());
-                        },
-                        child: Banner()),
-                    const SizedBox(height: 24),
-
-                    Expanded(
-                      child: GridView.builder(
-                        itemCount: state.cats!.length,
-                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 295,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: 0.9,
-                        ),
-                        itemBuilder: (context, index) {
-                          final book = state.cats![index];
-                          return BookCard(
-                            title: book.title.toString(),
-                            fileCount: book.totalNotes.toString() + (book.totalNotes > 1 ? " Notes" : " Note"),
-                            icon: Icons.menu_book,
-                            iconColor: book.iconColor.toString(),
-                            noteBookId: book.noteBookId, cat: book,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: context.mediaQueryWidth * 0.05,
+                vertical: context.mediaQueryHeight * 0.01),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                BlocBuilder<UserBloc, UserState>(
+                  builder: (context, state) {
+                    final user = state.user ?? HiveManager.getUserJson();
+                    return Header(userName: user?.name ?? '');
+                  },
                 ),
-              );
-            },
+                const SizedBox(height: 16),
+
+                AppSearchField(
+                  hint: 'Search notebooks and notes',
+                  onChanged: (v) => _onSearch(context, v),
+                ),
+                const SizedBox(height: 16),
+
+                Expanded(
+                  child: BlocBuilder<CatBloc, CatState>(
+                    builder: (context, state) {
+                      final searching = state.search.isNotEmpty;
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<CatBloc>().add(GetCatEvent());
+                          if (searching) context.read<NoteBloc>().add(RefreshNotesEvent());
+                        },
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.only(bottom: 90),
+                          children: [
+                            if (!searching) ...[
+                              InkWell(
+                                  onTap: () => context.read<CatBloc>().add(GetCatEvent()),
+                                  child: Banner()),
+                              const SizedBox(height: 16),
+                            ],
+                            _sectionTitle(
+                              searching ? 'Notebooks matching "${state.search}"' : 'Notebooks',
+                              loading: state.apiStatus == ApiStatus.loading && state.loaded,
+                            ),
+                            if (state.loaded && state.cats.isEmpty)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                child: Text(searching ? 'No notebooks found.' : 'No notebooks yet. Tap + to create one.',
+                                    style: TextStyle(color: Colors.grey.shade600)),
+                              ),
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: state.cats.length,
+                              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                                maxCrossAxisExtent: 295,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 0.9,
+                              ),
+                              itemBuilder: (context, index) {
+                                final book = state.cats[index];
+                                return BookCard(
+                                  title: book.title.toString(),
+                                  fileCount: book.totalNotes.toString() + (book.totalNotes == 1 ? " Note" : " Notes"),
+                                  icon: Icons.menu_book,
+                                  iconColor: book.iconColor.toString(),
+                                  noteBookId: book.noteBookId, cat: book,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            if (state.pageInfo.totalCount > 0)
+                              PaginationBar(
+                                pageInfo: state.pageInfo,
+                                itemName: 'notebook',
+                                itemNamePlural: 'notebooks',
+                                enabled: state.apiStatus != ApiStatus.loading,
+                                onPageChanged: (p) => context.read<CatBloc>().add(GetCatEvent(pageNo: p)),
+                              ),
+                            if (searching) ...[
+                              const SizedBox(height: 24),
+                              const _NoteSearchResults(),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  static Widget _sectionTitle(String text, {bool loading = false}) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            ),
+            if (loading) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+          ],
+        ),
+      );
 
   Container Banner() {
     return Container(
@@ -246,11 +317,12 @@ class _NoteDashboardContent extends StatelessWidget {
               Icons.menu_book,
               size: 25,
             ),
-            title: Text('Note Books'),
+            title: Text('New Note Book'),
             onTap: () {
-              Navigator.pushNamed(
-                  context, AppRoutes.categoryRoute
-              );
+              // The route needs the CatBloc so the list refreshes after saving.
+              final bloc = context.read<CatBloc>();
+              Navigator.pop(context); // close drawer
+              Navigator.pushNamed(context, AppRoutes.categoryRoute, arguments: bloc);
             },
           ),
           ListTile(
@@ -289,5 +361,61 @@ class _NoteDashboardContent extends StatelessWidget {
   }
 }
 
+/// "Matching notes" on the home page: notes from all notebooks whose title or text matches.
+class _NoteSearchResults extends StatelessWidget {
+  const _NoteSearchResults();
 
-
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NoteBloc, NoteState>(
+      builder: (context, state) {
+        final loading = state.apiStatus == ApiStatus.loading;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _NoteDashboardContent._sectionTitle('Notes matching "${state.search}"', loading: loading),
+            if (!state.loaded && loading)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (state.notes.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text('No notes found.', style: TextStyle(color: Colors.grey.shade600)),
+              )
+            else ...[
+              ...state.notes.map((note) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: NoteCard(
+                      title: note.title ?? '',
+                      category: note.noteBookName ?? '',
+                      date: note.createdAt ?? '',
+                      content: note.details ?? '',
+                      attachmentCount: note.attachmentCount,
+                      onDownload: () => PdfDownloadHelper.note(context, note.noteId),
+                      onTap: () async {
+                        final noteBloc = context.read<NoteBloc>();
+                        final catBloc = context.read<CatBloc>();
+                        await Navigator.pushNamed(context, AppRoutes.addnote, arguments: {
+                          'bloc': noteBloc,
+                          'noteId': note.noteBookId,
+                          'note': note,
+                        });
+                        noteBloc.add(RefreshNotesEvent());
+                        catBloc.add(GetCatEvent());
+                      },
+                    ),
+                  )),
+              PaginationBar(
+                pageInfo: state.pageInfo,
+                enabled: !loading,
+                onPageChanged: (p) => context.read<NoteBloc>().add(ChangeNotesPageEvent(p)),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
