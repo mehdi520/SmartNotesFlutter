@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:note_book/infra/network/api_error.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dartz/dartz.dart';
@@ -40,7 +41,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(state.copyWith(apiStatus: ApiStatus.success, resp: data));
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('auth_bloc: unexpected error: $e\n$st');
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
@@ -67,7 +69,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           emit(state.copyWith(apiStatus: ApiStatus.success, resp: data));
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('auth_bloc: unexpected error: $e\n$st');
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,

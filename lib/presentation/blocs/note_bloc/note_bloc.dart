@@ -95,7 +95,8 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
           emit(state.copyWith(apiStatus: ApiStatus.initial, apiIdentifier: "get_notes"));
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('note_bloc: unexpected error: $e\n$st');
       if (requestId != _requestId) return;
       emit(state.copyWith(
         apiStatus: ApiStatus.error,
@@ -115,7 +116,8 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
         return;
       }
 
-      BaseResponseModel resp = saved.getOrElse(() => null) as BaseResponseModel;
+      // fold, not getOrElse(() => null): the Either is typed, and a null fallback throws a TypeError.
+      BaseResponseModel resp = saved.fold((_) => throw StateError('unreachable'), (r) => r as BaseResponseModel);
 
       // Upload the files picked before saving (new notes have no id until saved).
       final noteId = resp.id ?? event.req.noteId;
@@ -139,7 +141,8 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
 
       emit(state.copyWith(apiStatus: ApiStatus.success, resp: resp, apiIdentifier: "add_update_note"));
       emit(state.copyWith(apiStatus: ApiStatus.initial, apiIdentifier: "add_update_note"));
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('note_bloc: unexpected error: $e\n$st');
       emit(state.copyWith(
         apiStatus: ApiStatus.error,
         resp: BaseResponseModel(status: false, message: ApiError.generic),
@@ -159,7 +162,8 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
           emit(state.copyWith(apiStatus: ApiStatus.initial, apiIdentifier: "delete_note"));
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('note_bloc: unexpected error: $e\n$st');
       emit(state.copyWith(
         apiStatus: ApiStatus.error,
         resp: BaseResponseModel(status: false, message: ApiError.generic),

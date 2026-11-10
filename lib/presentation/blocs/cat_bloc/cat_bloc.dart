@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:note_book/infra/network/api_error.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dartz/dartz.dart';
@@ -64,7 +65,8 @@ class CatBloc extends Bloc<CatEvent, CatState> {
           emit(state.copyWith(apiStatus: ApiStatus.initial,apiIdentifier: "get_cat"));
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('cat_bloc: unexpected error: $e\n$st');
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
@@ -100,7 +102,8 @@ class CatBloc extends Bloc<CatEvent, CatState> {
           emit(state.copyWith(apiStatus: ApiStatus.initial,  apiIdentifier : "add_update"));
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('cat_bloc: unexpected error: $e\n$st');
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
@@ -142,7 +145,8 @@ class CatBloc extends Bloc<CatEvent, CatState> {
           emit(state.copyWith(apiStatus: ApiStatus.initial,  apiIdentifier : "delete"));
         },
       );
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('cat_bloc: unexpected error: $e\n$st');
       emit(
         state.copyWith(
             apiStatus: ApiStatus.error,
