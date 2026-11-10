@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../infra/core/configs/assets/app_images.dart';
 import '../../../infra/core/core_exports.dart';
 import 'bloc/splash_cubit.dart';
 
@@ -31,7 +30,7 @@ class SplashScreen extends StatelessWidget {
               // Container(child: Image.asset(AppImages.app_bg)),
               Center(
                 child:
-                Container(width: 150, child: Image.asset(AppImages.logo)),
+                SizedBox(width: 150, child: Image.asset(AppImages.logo)),
               ),
             ])
     )

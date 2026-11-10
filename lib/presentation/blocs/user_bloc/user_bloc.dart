@@ -1,4 +1,5 @@
-import 'package:bloc/bloc.dart';
+import 'package:note_book/infra/network/api_error.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:note_book/data/data_sources/local/HiveManager.dart';
@@ -32,7 +33,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       Either returnedData = await updateProfileUsecase.call(params: event.req);
       returnedData.fold(
         (error) {
-          print(error);
           emit(
             state.copyWith(
               apiStatus: ApiStatus.error,
@@ -64,7 +64,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
-          resp: BaseResponseModel(status: false, message: e.toString()),
+          resp: BaseResponseModel(status: false, message: ApiError.generic),
         ),
       );
     }
@@ -76,7 +76,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       Either returnedData = await getProfileUsecase.call();
       returnedData.fold(
         (error) {
-          print(error);
           emit(
             state.copyWith(
               apiStatus: ApiStatus.error,
@@ -97,7 +96,7 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
-          resp: BaseResponseModel(status: false, message: e.toString()),
+          resp: BaseResponseModel(status: false, message: ApiError.generic),
         ),
       );
     }

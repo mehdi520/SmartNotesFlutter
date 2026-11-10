@@ -6,7 +6,7 @@ part 'get_profile_res_model.g.dart';
 @JsonSerializable()
 class GetProfileResModel extends BaseResponseModel{
   final UserModel? data;
-  GetProfileResModel({required super.status, super.message, this.data});
+  const GetProfileResModel({required super.status, super.message, this.data});
 
   factory GetProfileResModel.fromJson(Map<String, dynamic> json) => _$GetProfileResModelFromJson(json);
   Map<String, dynamic> toJson() => _$GetProfileResModelToJson(this);

@@ -28,8 +28,8 @@ class Primarytextinputfield extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
        controller: ctrl,
-      keyboardType: keyboardType != null ? keyboardType:  TextInputType.text,
-      textInputAction: imeAction != null ? imeAction : TextInputAction.done,
+      keyboardType: keyboardType ?? TextInputType.text,
+      textInputAction: imeAction ?? TextInputAction.done,
       obscureText: isSecureTextField != null ? isSecureTextField! : false,
       validator: validator,
       style: TextStyle(

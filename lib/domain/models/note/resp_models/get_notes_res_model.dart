@@ -16,6 +16,10 @@ class GetNotesResModel extends BaseResponseModel{
   final int totalCount;
   final List<NoteDataModel>? data;
 
+  /// Set when this came from the offline cache instead of the server.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final DateTime? cachedAt;
+
   const GetNotesResModel({
     required super.status,
     super.message,
@@ -24,7 +28,22 @@ class GetNotesResModel extends BaseResponseModel{
     this.currentPage = 1,
     this.pageSize = 10,
     this.totalCount = 0,
+    this.cachedAt,
   });
+
+  factory GetNotesResModel.fromCache(Map<String, dynamic> json, DateTime savedAt) {
+    final m = GetNotesResModel.fromJson(json);
+    return GetNotesResModel(
+      status: m.status,
+      message: m.message,
+      data: m.data,
+      totalPage: m.totalPage,
+      currentPage: m.currentPage,
+      pageSize: m.pageSize,
+      totalCount: m.totalCount,
+      cachedAt: savedAt,
+    );
+  }
 
   PageInfo get pageInfo => PageInfo(
       currentPage: currentPage, pageSize: pageSize, totalPage: totalPage, totalCount: totalCount);

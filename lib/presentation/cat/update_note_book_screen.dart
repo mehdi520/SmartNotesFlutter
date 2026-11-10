@@ -18,7 +18,7 @@ class UpdateNoteBookScreen extends StatelessWidget {
   final OverlayService _loadingService = OverlayService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
-  CatModel cat;
+  final CatModel cat;
   UpdateNoteBookScreen({super.key,required this.cat}) {
     _titleController.text = cat.title ?? '';
   }
@@ -30,7 +30,7 @@ class UpdateNoteBookScreen extends StatelessWidget {
       var req = CatModel(
         totalNotes: 0,
         noteBookId: cat.noteBookId,
-        userId: user!.id!,
+        userId: user!.id,
         title: _titleController.text,
         iconColor: state.selectedIconColor,
       );
@@ -79,7 +79,6 @@ class UpdateNoteBookScreen extends StatelessWidget {
           if (state.apiStatus == ApiStatus.loading) {
             _loadingService.showLoadingOverlay(context);
           }
-          print("state " + state.apiStatus.toString());
           if (state.apiStatus == ApiStatus.success) {
             _loadingService.hideLoadingOverlay();
             context.read<CatBloc>().add(GetCatEvent());

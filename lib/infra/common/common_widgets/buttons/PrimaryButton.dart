@@ -16,7 +16,7 @@ class PrimaryButton extends StatelessWidget {
       child: FilledButton(
           onPressed: onTap,
           style: FilledButton.styleFrom(
-            backgroundColor:  bgColor == null ?  AppColors.primary : bgColor ,
+            backgroundColor:  bgColor ?? AppColors.primary ,
             foregroundColor: AppColors.white,
             minimumSize: Size(double.infinity, 55),
             shape: RoundedRectangleBorder(

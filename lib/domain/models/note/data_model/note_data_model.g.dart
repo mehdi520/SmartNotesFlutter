@@ -16,9 +16,12 @@ NoteDataModel _$NoteDataModelFromJson(Map<String, dynamic> json) =>
       noteBookName: json['noteBookName'] as String?,
       createdAt: json['createdAt'] as String?,
       attachmentCount: (json['attachmentCount'] as num?)?.toInt() ?? 0,
-      attachments: (json['attachments'] as List<dynamic>?)
-          ?.map((e) => NoteAttachmentModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      attachments:
+          (json['attachments'] as List<dynamic>?)
+              ?.map(
+                (e) => NoteAttachmentModel.fromJson(e as Map<String, dynamic>),
+              )
+              .toList(),
     );
 
 Map<String, dynamic> _$NoteDataModelToJson(NoteDataModel instance) =>

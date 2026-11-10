@@ -112,7 +112,7 @@ class _AddUpdateNoteScreenState extends State<AddUpdateNoteScreen> {
             current.apiIdentifier == "add_update_note" || current.apiIdentifier == "delete_note",
         listener: (context, state) {
           if (state.apiStatus == ApiStatus.loading) {
-            _loadingService.showLoadingOverlay(context);
+            _loadingService.showLoadingOverlay(context, progress: context.read<NoteBloc>().uploadProgress);
           }
           if (state.apiStatus == ApiStatus.success) {
             _loadingService.hideLoadingOverlay();

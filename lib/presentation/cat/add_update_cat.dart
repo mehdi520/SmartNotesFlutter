@@ -18,7 +18,6 @@ class AddUpdateCat extends StatelessWidget {
   final OverlayService _loadingService = OverlayService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passController = TextEditingController();
 
   AddUpdateCat({super.key});
 
@@ -29,7 +28,7 @@ class AddUpdateCat extends StatelessWidget {
       var req = CatModel(
         totalNotes: 0,
         noteBookId: 0,
-        userId: user!.id!,
+        userId: user!.id,
         title: _emailController.text,
         iconColor: state.selectedIconColor,
       );
@@ -48,7 +47,6 @@ class AddUpdateCat extends StatelessWidget {
           if (state.apiStatus == ApiStatus.loading) {
             _loadingService.showLoadingOverlay(context);
           }
-          print("state " + state.apiStatus.toString());
           if (state.apiStatus == ApiStatus.success) {
             _loadingService.hideLoadingOverlay();
             context.read<CatBloc>().add(GetCatEvent());

@@ -1,4 +1,5 @@
-import 'package:bloc/bloc.dart';
+import 'package:note_book/infra/network/api_error.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:note_book/domain/category/usecases/category_use_cases.dart';
@@ -40,7 +41,6 @@ class CatBloc extends Bloc<CatEvent, CatState> {
       if (requestId != _requestId) return;
       returnedData.fold(
             (error) {
-          print(error);
           emit(
             state.copyWith(
               apiStatus: ApiStatus.error,
@@ -57,6 +57,7 @@ class CatBloc extends Bloc<CatEvent, CatState> {
             cats: data.data,
             pageInfo: (data as GetUserCatsResModel).pageInfo,
             loaded: true,
+            cachedAt: () => data.cachedAt,
               apiIdentifier: "get_cat"
           ));
           // Reset to initial after success
@@ -67,7 +68,7 @@ class CatBloc extends Bloc<CatEvent, CatState> {
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
-          resp: BaseResponseModel(status: false, message: e.toString()),
+          resp: BaseResponseModel(status: false, message: ApiError.generic),
             apiIdentifier: "get_cat"
         ),
       );
@@ -80,7 +81,6 @@ class CatBloc extends Bloc<CatEvent, CatState> {
       Either returnedData = await categoryUseCases.addOrUpdateCat(event.req);
       returnedData.fold(
             (error) {
-          print(error);
           emit(
             state.copyWith(
               apiStatus: ApiStatus.error,
@@ -104,7 +104,7 @@ class CatBloc extends Bloc<CatEvent, CatState> {
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
-          resp: BaseResponseModel(status: false, message: e.toString()),
+          resp: BaseResponseModel(status: false, message: ApiError.generic),
             apiIdentifier : "add_update"
         ),
       );
@@ -113,7 +113,6 @@ class CatBloc extends Bloc<CatEvent, CatState> {
 
   void _onUpdateIconColor(UpdateIconColorEvent event, Emitter<CatState> emit)
   {
-    print("selectedColor" + event.iconColor);
     emit(state.copyWith(selectedIconColor: event.iconColor,apiIdentifier: "add_update"));
   }
 
@@ -124,7 +123,6 @@ class CatBloc extends Bloc<CatEvent, CatState> {
       Either returnedData = await categoryUseCases.deleteCat(event.noteBookId);
       returnedData.fold(
             (error) {
-          print(error);
           emit(
             state.copyWith(
                 apiStatus: ApiStatus.error,
@@ -148,7 +146,7 @@ class CatBloc extends Bloc<CatEvent, CatState> {
       emit(
         state.copyWith(
             apiStatus: ApiStatus.error,
-            resp: BaseResponseModel(status: false, message: e.toString()),
+            resp: BaseResponseModel(status: false, message: ApiError.generic),
             apiIdentifier : "delete"
         ),
       );

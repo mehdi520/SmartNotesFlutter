@@ -19,13 +19,13 @@ class SignupScreen extends StatelessWidget {
   SignupScreen({super.key});
 
   final _formKey = GlobalKey<FormState>();
-  TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
-  TextEditingController _passController = TextEditingController();
-  TextEditingController _conFpassController = TextEditingController();
+  final TextEditingController _passController = TextEditingController();
+  final TextEditingController _conFpassController = TextEditingController();
 
   void _submitLogin(BuildContext context) {
 
@@ -118,13 +118,11 @@ class SignupScreen extends StatelessWidget {
             _loadingService.showLoadingOverlay(context);
           }
           if (state.apiStatus == ApiStatus.success) {
-            print("login success");
             _loadingService.hideLoadingOverlay();
             ToastUtils.showSuccess("Registered successfully");
             Navigator.pop(context);
           }
           if (state.apiStatus == ApiStatus.error) {
-            print("login error" + state.resp!.message.toString());
             ToastUtils.showError(state.resp!.message.toString());
             _loadingService.hideLoadingOverlay();
           }

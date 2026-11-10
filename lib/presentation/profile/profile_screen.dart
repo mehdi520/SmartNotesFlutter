@@ -47,22 +47,22 @@ class ProfileScreen extends StatelessWidget {
       );
     }
 
-    final _formKey = GlobalKey<FormState>();
-    final _nameController = TextEditingController(text: user.name);
-    final _emailController = TextEditingController(text: user.email);
-    final _phoneController = TextEditingController(text: user.phone);
-    final _dateController = TextEditingController(
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: user.name);
+    final emailController = TextEditingController(text: user.email);
+    final phoneController = TextEditingController(text: user.phone);
+    final dateController = TextEditingController(
       text: DateUtil.getDateFromServerDate(user.createdAt)
     );
 
-    void _updateProfile() {
-      if (_formKey.currentState!.validate()) {
+    void updateProfile() {
+      if (formKey.currentState!.validate()) {
         context.read<UserBloc>().add(
           UpdateProfileEvent(
             req: UpdateProfileReqModel(
-              name: _nameController.text,
-              phone: _phoneController.text,
-              email: _emailController.text
+              name: nameController.text,
+              phone: phoneController.text,
+              email: emailController.text
             ),
           ),
         );
@@ -90,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -111,21 +111,21 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 30),
                   Textinputformfield(
                     hintText: 'Enter your name',
-                    ctrl: _nameController,
+                    ctrl: nameController,
                     formLabel: 'Name',
                     validator: _validateName,
                   ),
                   const SizedBox(height: 16),
                   Textinputformfield(
                     hintText: 'Enter your email',
-                    ctrl: _emailController,
+                    ctrl: emailController,
                     formLabel: 'Email',
                     isEnabled: false,
                   ),
                   const SizedBox(height: 16),
                   Textinputformfield(
                     hintText: 'Enter your phone number',
-                    ctrl: _phoneController,
+                    ctrl: phoneController,
                     formLabel: 'Phone Number',
                     keyboardType: TextInputType.phone,
                     validator: _validatePhone,
@@ -133,14 +133,14 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Textinputformfield(
                     hintText: 'Date of Join',
-                    ctrl: _dateController,
+                    ctrl: dateController,
                     formLabel: 'Date of Join',
                     isEnabled: false,
                   ),
                   const SizedBox(height: 30),
                   PrimaryButton(
                     text: 'Update Profile',
-                    onTap: _updateProfile,
+                    onTap: updateProfile,
                   ),
                 ],
               ),

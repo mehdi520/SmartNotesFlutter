@@ -7,6 +7,9 @@ import 'package:note_book/domain/models/note/data_model/note_data_model.dart';
 import 'package:note_book/domain/models/note/data_model/picked_file_model.dart';
 import 'package:note_book/domain/models/note/req_models/pagination_req_model.dart';
 import 'package:note_book/domain/note/contract/note_repository.dart';
+import 'package:note_book/domain/models/note/resp_models/get_notes_res_model.dart';
+import 'package:note_book/data/repository/api_call.dart';
+import 'package:note_book/infra/network/api_error.dart';
 
 class NoteRepositoryImpl extends NoteRepository {
   final ApiService _apiService;
@@ -14,74 +17,69 @@ class NoteRepositoryImpl extends NoteRepository {
 
   NoteRepositoryImpl(this._apiService, this._filesApi);
 
-  /// Runs an API call and maps it to Either: Right(response) when status == true,
-  /// otherwise Left(BaseResponseModel) with the server/network message.
-  Future<Either> _run<T extends BaseResponseModel>(Future<T> Function() call) async {
-    try {
-      final data = await call();
-      if (data.status) return Right(data);
-      return Left(BaseResponseModel(status: false, message: data.message));
-    } on DioException catch (e) {
-      return Left(_dioError(e));
-    } catch (e) {
-      return Left(BaseResponseModel(status: false, message: e.toString()));
-    }
-  }
-
-  BaseResponseModel _dioError(DioException e) {
-    final body = e.response?.data;
-    final serverMessage = body is Map ? body['message']?.toString() : null;
-    return BaseResponseModel(
-      status: false,
-      message: serverMessage ?? e.message ?? 'Network error',
-      code: e.response?.statusCode ?? 0,
+  /// Note pages are cached for offline use (search results are not).
+  @override
+  Future<Either> getNotes(PaginationReqModel req) {
+    final searching = req.search != null && req.search!.trim().isNotEmpty;
+    return cachedApiCall<GetNotesResModel>(
+      cacheKey: searching ? null : 'notes:${req.categoryId ?? 0}:${req.pageNo}:${req.pageSize}',
+      call: () async => (await _apiService.getUserNotes(req: req)).data,
+      toJson: (d) => d.toJson(),
+      fromCache: GetNotesResModel.fromCache,
     );
   }
 
   @override
-  Future<Either> getNotes(PaginationReqModel req) =>
-      _run(() async => (await _apiService.getUserNotes(req: req)).data);
+  Future<Either> addUpdateNote(NoteDataModel req) => retrofitCall(() => _apiService.addOrUpdateNote(req: req));
 
   @override
-  Future<Either> addUpdateNote(NoteDataModel req) =>
-      _run(() async => (await _apiService.addOrUpdateNote(req: req)).data);
+  Future<Either> delNote(int note_id) => retrofitCall(() => _apiService.deleteNote(noteId: note_id));
 
   @override
-  Future<Either> delNote(int note_id) =>
-      _run(() async => (await _apiService.deleteNote(noteId: note_id)).data);
+  Future<Either> getNote(int noteId) => apiCall(() => _filesApi.getNote(noteId));
 
   @override
-  Future<Either> getNote(int noteId) => _run(() => _filesApi.getNote(noteId));
+  Future<Either> getNoteBookExport(int noteBookId) => apiCall(() => _filesApi.getNoteBookExport(noteBookId));
 
   @override
-  Future<Either> getNoteBookExport(int noteBookId) => _run(() => _filesApi.getNoteBookExport(noteBookId));
+  Future<Either> getAttachments(int noteId) => apiCall(() => _filesApi.getAttachments(noteId));
 
   @override
-  Future<Either> getAttachments(int noteId) => _run(() => _filesApi.getAttachments(noteId));
+  Future<Either> uploadAttachments(
+    int noteId,
+    List<PickedFileModel> files, {
+    void Function(double progress)? onProgress,
+  }) => apiCall(() => _filesApi.uploadAttachments(noteId, files, onSendProgress: _progress(onProgress)));
 
   @override
-  Future<Either> uploadAttachments(int noteId, List<PickedFileModel> files) =>
-      _run(() => _filesApi.uploadAttachments(noteId, files));
+  Future<Either> replaceAttachment(
+    int attachmentId,
+    PickedFileModel file, {
+    void Function(double progress)? onProgress,
+  }) => apiCall(() => _filesApi.replaceAttachment(attachmentId, file, onSendProgress: _progress(onProgress)));
 
-  @override
-  Future<Either> replaceAttachment(int attachmentId, PickedFileModel file) =>
-      _run(() => _filesApi.replaceAttachment(attachmentId, file));
+  static ProgressCallback? _progress(void Function(double progress)? onProgress) =>
+      onProgress == null
+          ? null
+          : (sent, total) {
+            if (total > 0) onProgress((sent / total).clamp(0.0, 1.0));
+          };
 
   @override
   Future<Either> renameAttachment(int attachmentId, String fileName) =>
-      _run(() => _filesApi.renameAttachment(attachmentId, fileName));
+      apiCall(() => _filesApi.renameAttachment(attachmentId, fileName));
 
   @override
-  Future<Either> deleteAttachment(int attachmentId) => _run(() => _filesApi.deleteAttachment(attachmentId));
+  Future<Either> deleteAttachment(int attachmentId) => apiCall(() => _filesApi.deleteAttachment(attachmentId));
 
   @override
   Future<Either> downloadAttachment(int attachmentId) async {
     try {
       return Right(await _filesApi.downloadAttachment(attachmentId));
     } on DioException catch (e) {
-      return Left(_dioError(e));
-    } catch (e) {
-      return Left(BaseResponseModel(status: false, message: e.toString()));
+      return Left(BaseResponseModel(status: false, message: ApiError.message(e), code: e.response?.statusCode ?? 0));
+    } catch (_) {
+      return const Left(BaseResponseModel(status: false, message: ApiError.generic));
     }
   }
 }

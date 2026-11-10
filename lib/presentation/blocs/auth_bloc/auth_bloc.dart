@@ -1,9 +1,11 @@
-import 'package:bloc/bloc.dart';
+import 'package:note_book/infra/network/api_error.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:note_book/domain/auth/usecases/login_usecase.dart';
 import 'package:note_book/domain/auth/usecases/signup_usecase.dart';
 import 'package:note_book/domain/models/auth_models/response_model/login/login_res_model.dart';
+import 'package:note_book/domain/models/auth_models/login_req_model.dart';
 import 'package:note_book/domain/models/auth_models/sign_up_req_model.dart';
 import 'package:note_book/domain/models/common_models/base_response_model.dart';
 import 'package:note_book/infra/utils/enums.dart';
@@ -27,7 +29,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       Either returnedData = await loginUsecase(event.req);
       returnedData.fold(
         (error) {
-          print(error);
           emit(
             state.copyWith(
               apiStatus: ApiStatus.error,
@@ -43,7 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
-          resp: LoginResModel(status: false, message: e.toString()),
+          resp: LoginResModel(status: false, message: ApiError.generic),
         ),
       );
     }
@@ -55,7 +56,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       Either returnedData = await signupUsecase.call(params: event.req);
       returnedData.fold(
         (error) {
-          print(error);
           emit(
             state.copyWith(
               apiStatus: ApiStatus.error,
@@ -71,7 +71,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         state.copyWith(
           apiStatus: ApiStatus.error,
-          resp: LoginResModel(status: false, message: e.toString()),
+          resp: LoginResModel(status: false, message: ApiError.generic),
         ),
       );
     }

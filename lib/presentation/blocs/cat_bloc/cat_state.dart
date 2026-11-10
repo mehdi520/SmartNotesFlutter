@@ -13,6 +13,9 @@ class CatState extends Equatable {
   final PageInfo pageInfo;
   final bool loaded;
 
+  /// When the list on screen came from the offline cache: the time it was saved. Null = live data.
+  final DateTime? cachedAt;
+
   const CatState({
     this.apiStatus = ApiStatus.initial,
     this.resp,
@@ -23,6 +26,7 @@ class CatState extends Equatable {
     this.pageSize = 12,
     this.pageInfo = const PageInfo(pageSize: 12),
     this.loaded = false,
+    this.cachedAt,
   });
 
   CatState copyWith({
@@ -35,6 +39,7 @@ class CatState extends Equatable {
     int? pageSize,
     PageInfo? pageInfo,
     bool? loaded,
+    DateTime? Function()? cachedAt,
   }) {
     return CatState(
       apiStatus: apiStatus ?? this.apiStatus,
@@ -46,10 +51,11 @@ class CatState extends Equatable {
       pageSize: pageSize ?? this.pageSize,
       pageInfo: pageInfo ?? this.pageInfo,
       loaded: loaded ?? this.loaded,
+      cachedAt: cachedAt != null ? cachedAt() : this.cachedAt,
     );
   }
 
   @override
   List<Object?> get props =>
-      [apiStatus, resp, cats, apiIdentifier, selectedIconColor, search, pageSize, pageInfo, loaded];
+      [apiStatus, resp, cats, apiIdentifier, selectedIconColor, search, pageSize, pageInfo, loaded, cachedAt];
 }

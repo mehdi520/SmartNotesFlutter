@@ -34,7 +34,7 @@ class ColorUtils {
 
   // Get a random color from the array
   static Color getRandomColor() {
-    int randomIndex = (colorArray.length * (new DateTime.now().millisecondsSinceEpoch % 100) / 100).toInt();
+    int randomIndex = (colorArray.length * (DateTime.now().millisecondsSinceEpoch % 100) / 100).toInt();
     return colorFromHex(colorArray[randomIndex]);
   }
 

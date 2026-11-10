@@ -34,32 +34,22 @@ Future<void> initializedDepencies() async {
   // Initialize Hive and register adapters
   await HiveManager.init();
 
-  final dio = Dio();
-  if(kIsWeb) {
-    dio.options = BaseOptions(
-      baseUrl: APIBaseURL,
-      connectTimeout: Duration(minutes: 2),
-      receiveTimeout: Duration(minutes: 2),
-    );
-  } else {
-    final securityContext = SecurityContext(withTrustedRoots: true);
-    final httpClient = HttpClient(context: securityContext);
-
-    dio.httpClientAdapter = IOHttpClientAdapter()
-      ..createHttpClient = () {
-        return httpClient;
-      };
+  final dio = Dio(BaseOptions(
+    baseUrl: APIBaseURL,
+    // Fail fast when the server can't be reached (offline mode kicks in), but give uploads
+    // and downloads of large attachments time to finish.
+    connectTimeout: const Duration(seconds: 15),
+    sendTimeout: kIsWeb ? null : const Duration(minutes: 2), // not supported for web requests without a body
+    receiveTimeout: const Duration(minutes: 2),
+  ));
+  if (!kIsWeb) {
+    final httpClient = HttpClient(context: SecurityContext(withTrustedRoots: true));
+    dio.httpClientAdapter = IOHttpClientAdapter()..createHttpClient = () => httpClient;
   }
 
-  dio.options = BaseOptions(
-    baseUrl: APIBaseURL,
-    connectTimeout: Duration(minutes: 2),
-    receiveTimeout: Duration(minutes: 2),
-  );
-
   dio.interceptors.addAll([
-    LoggingInterceptor(),
     AuthInterceptor(),
+    LoggingInterceptor(), // after auth, so the log shows the (hidden) Authorization header
   ]);
 
   sl.registerSingleton<Dio>(dio);

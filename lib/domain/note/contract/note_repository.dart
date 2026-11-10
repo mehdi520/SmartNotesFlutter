@@ -13,8 +13,9 @@ abstract class NoteRepository {
 
   // Attachments
   Future<Either> getAttachments(int noteId);
-  Future<Either> uploadAttachments(int noteId, List<PickedFileModel> files);
-  Future<Either> replaceAttachment(int attachmentId, PickedFileModel file);
+  /// [onProgress] gets 0.0–1.0 while the files are being sent.
+  Future<Either> uploadAttachments(int noteId, List<PickedFileModel> files, {void Function(double progress)? onProgress});
+  Future<Either> replaceAttachment(int attachmentId, PickedFileModel file, {void Function(double progress)? onProgress});
   Future<Either> renameAttachment(int attachmentId, String fileName);
   Future<Either> deleteAttachment(int attachmentId);
   /// Right = Uint8List

@@ -22,11 +22,13 @@ class NoteUsecase {
 
   Future<Either> getAttachments(int noteId) => _repository.getAttachments(noteId);
 
-  Future<Either> uploadAttachments(int noteId, List<PickedFileModel> files) =>
-      _repository.uploadAttachments(noteId, files);
+  Future<Either> uploadAttachments(int noteId, List<PickedFileModel> files,
+          {void Function(double progress)? onProgress}) =>
+      _repository.uploadAttachments(noteId, files, onProgress: onProgress);
 
-  Future<Either> replaceAttachment(int attachmentId, PickedFileModel file) =>
-      _repository.replaceAttachment(attachmentId, file);
+  Future<Either> replaceAttachment(int attachmentId, PickedFileModel file,
+          {void Function(double progress)? onProgress}) =>
+      _repository.replaceAttachment(attachmentId, file, onProgress: onProgress);
 
   Future<Either> renameAttachment(int attachmentId, String fileName) =>
       _repository.renameAttachment(attachmentId, fileName);

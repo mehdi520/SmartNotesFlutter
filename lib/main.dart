@@ -4,6 +4,7 @@ import 'package:note_book/presentation/blocs/user_bloc/user_bloc.dart';
 import 'package:note_book/presentation/pub/splash/bloc/splash_cubit.dart';
 
 import 'infra/core/core_exports.dart';
+import 'infra/network/session_manager.dart';
 import 'infra/di/service_locator.dart';
 
 
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
+        navigatorKey: SessionManager.navigatorKey,
         theme: AppTheme.appTheme,
         debugShowCheckedModeBanner: false,
         initialRoute: AppRoutes.splashRoute,

@@ -19,14 +19,14 @@ NoteAttachmentModel _$NoteAttachmentModelFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$NoteAttachmentModelToJson(
-        NoteAttachmentModel instance) =>
-    <String, dynamic>{
-      'attachmentId': instance.attachmentId,
-      'noteId': instance.noteId,
-      'fileName': instance.fileName,
-      'filePath': instance.filePath,
-      'contentType': instance.contentType,
-      'fileSize': instance.fileSize,
-      'isImage': instance.isImage,
-      'createdAt': instance.createdAt,
-    };
+  NoteAttachmentModel instance,
+) => <String, dynamic>{
+  'attachmentId': instance.attachmentId,
+  'noteId': instance.noteId,
+  'fileName': instance.fileName,
+  'filePath': instance.filePath,
+  'contentType': instance.contentType,
+  'fileSize': instance.fileSize,
+  'isImage': instance.isImage,
+  'createdAt': instance.createdAt,
+};

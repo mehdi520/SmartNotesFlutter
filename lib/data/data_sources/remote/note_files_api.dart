@@ -19,8 +19,10 @@ class NoteFilesApi {
   }
 
   Future<GetNoteBookExportResModel> getNoteBookExport(int noteBookId) async {
-    final res = await _dio.get<Map<String, dynamic>>('api/Note/GetNoteBookExport',
-        queryParameters: {'noteBookId': noteBookId});
+    final res = await _dio.get<Map<String, dynamic>>(
+      'api/Note/GetNoteBookExport',
+      queryParameters: {'noteBookId': noteBookId},
+    );
     return GetNoteBookExportResModel.fromJson(res.data!);
   }
 
@@ -29,44 +31,64 @@ class NoteFilesApi {
     return GetAttachmentsResModel.fromJson(res.data!);
   }
 
-  Future<GetAttachmentsResModel> uploadAttachments(int noteId, List<PickedFileModel> files,
-      {ProgressCallback? onSendProgress}) async {
+  Future<GetAttachmentsResModel> uploadAttachments(
+    int noteId,
+    List<PickedFileModel> files, {
+    ProgressCallback? onSendProgress,
+  }) async {
     final form = FormData();
     form.fields.add(MapEntry('noteId', noteId.toString()));
     for (final f in files) {
       form.files.add(MapEntry('files', MultipartFile.fromBytes(f.bytes, filename: f.name)));
     }
-    final res = await _dio.post<Map<String, dynamic>>('api/Note/UploadAttachments',
-        data: form, onSendProgress: onSendProgress);
+    final res = await _dio.post<Map<String, dynamic>>(
+      'api/Note/UploadAttachments',
+      data: form,
+      onSendProgress: onSendProgress,
+    );
     return GetAttachmentsResModel.fromJson(res.data!);
   }
 
-  Future<GetAttachmentsResModel> replaceAttachment(int attachmentId, PickedFileModel file) async {
+  Future<GetAttachmentsResModel> replaceAttachment(
+    int attachmentId,
+    PickedFileModel file, {
+    ProgressCallback? onSendProgress,
+  }) async {
     final form = FormData.fromMap({
       'attachmentId': attachmentId.toString(),
       'file': MultipartFile.fromBytes(file.bytes, filename: file.name),
     });
-    final res = await _dio.post<Map<String, dynamic>>('api/Note/ReplaceAttachment', data: form);
+    final res = await _dio.post<Map<String, dynamic>>(
+      'api/Note/ReplaceAttachment',
+      data: form,
+      onSendProgress: onSendProgress,
+    );
     return GetAttachmentsResModel.fromJson(res.data!);
   }
 
   Future<BaseResponseModel> renameAttachment(int attachmentId, String fileName) async {
-    final res = await _dio.post<Map<String, dynamic>>('api/Note/RenameAttachment',
-        data: {'attachmentId': attachmentId, 'fileName': fileName});
+    final res = await _dio.post<Map<String, dynamic>>(
+      'api/Note/RenameAttachment',
+      data: {'attachmentId': attachmentId, 'fileName': fileName},
+    );
     return BaseResponseModel.fromJson(res.data!);
   }
 
   Future<BaseResponseModel> deleteAttachment(int attachmentId) async {
-    final res = await _dio.get<Map<String, dynamic>>('api/Note/DeleteAttachment',
-        queryParameters: {'attachmentId': attachmentId});
+    final res = await _dio.get<Map<String, dynamic>>(
+      'api/Note/DeleteAttachment',
+      queryParameters: {'attachmentId': attachmentId},
+    );
     return BaseResponseModel.fromJson(res.data!);
   }
 
   /// Raw bytes of an attachment (only the owner can download it).
   Future<Uint8List> downloadAttachment(int attachmentId) async {
-    final res = await _dio.get<List<int>>('api/Note/DownloadAttachment',
-        queryParameters: {'attachmentId': attachmentId},
-        options: Options(responseType: ResponseType.bytes));
+    final res = await _dio.get<List<int>>(
+      'api/Note/DownloadAttachment',
+      queryParameters: {'attachmentId': attachmentId},
+      options: Options(responseType: ResponseType.bytes),
+    );
     return Uint8List.fromList(res.data ?? const []);
   }
 }

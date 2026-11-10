@@ -13,7 +13,4 @@ PassChangeReqModel _$PassChangeReqModelFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$PassChangeReqModelToJson(PassChangeReqModel instance) =>
-    <String, dynamic>{
-      'oldPass': instance.oldPass,
-      'newPass': instance.newPass,
-    };
+    <String, dynamic>{'oldPass': instance.oldPass, 'newPass': instance.newPass};

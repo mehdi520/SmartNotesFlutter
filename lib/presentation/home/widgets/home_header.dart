@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../infra/core/core_exports.dart';
-import '../../../presentation/blocs/cat_bloc/cat_bloc.dart';
 
 class Header extends StatelessWidget {
   final String userName;
 
   const Header({
-    Key? key,
+    super.key,
     required this.userName,
-  }) : super(key: key);
+  });
 
 
 

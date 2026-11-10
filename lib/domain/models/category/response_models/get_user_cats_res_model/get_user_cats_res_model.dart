@@ -16,6 +16,10 @@ class GetUserCatsResModel extends BaseResponseModel{
   @JsonKey(defaultValue: 0)
   final int totalCount;
 
+  /// Set when this came from the offline cache instead of the server.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final DateTime? cachedAt;
+
   const GetUserCatsResModel({
     required super.status,
     super.message,
@@ -24,7 +28,22 @@ class GetUserCatsResModel extends BaseResponseModel{
     this.pageSize = 10,
     this.totalPage = 1,
     this.totalCount = 0,
+    this.cachedAt,
   });
+
+  factory GetUserCatsResModel.fromCache(Map<String, dynamic> json, DateTime savedAt) {
+    final m = GetUserCatsResModel.fromJson(json);
+    return GetUserCatsResModel(
+      status: m.status,
+      message: m.message,
+      data: m.data,
+      currentPage: m.currentPage,
+      pageSize: m.pageSize,
+      totalPage: m.totalPage,
+      totalCount: m.totalCount,
+      cachedAt: savedAt,
+    );
+  }
 
   PageInfo get pageInfo => PageInfo(
       currentPage: currentPage, pageSize: pageSize, totalPage: totalPage, totalCount: totalCount);

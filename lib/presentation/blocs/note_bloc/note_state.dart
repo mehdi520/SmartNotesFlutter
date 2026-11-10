@@ -15,6 +15,9 @@ class NoteState extends Equatable {
   /// True once the first page has loaded (to tell "loading" from "no results").
   final bool loaded;
 
+  /// When the list on screen came from the offline cache: the time it was saved. Null = live data.
+  final DateTime? cachedAt;
+
   const NoteState({
     this.apiStatus = ApiStatus.initial,
     this.resp,
@@ -25,6 +28,7 @@ class NoteState extends Equatable {
     this.pageSize = 10,
     this.pageInfo = const PageInfo(),
     this.loaded = false,
+    this.cachedAt,
   });
 
   int get totalPage => pageInfo.totalPage;
@@ -39,6 +43,7 @@ class NoteState extends Equatable {
     int? pageSize,
     PageInfo? pageInfo,
     bool? loaded,
+    DateTime? Function()? cachedAt,
   }) {
     return NoteState(
       apiStatus: apiStatus ?? this.apiStatus,
@@ -50,10 +55,11 @@ class NoteState extends Equatable {
       pageSize: pageSize ?? this.pageSize,
       pageInfo: pageInfo ?? this.pageInfo,
       loaded: loaded ?? this.loaded,
+      cachedAt: cachedAt != null ? cachedAt() : this.cachedAt,
     );
   }
 
   @override
   List<Object?> get props =>
-      [apiStatus, resp, notes, apiIdentifier, categoryId, search, pageSize, pageInfo, loaded];
+      [apiStatus, resp, notes, apiIdentifier, categoryId, search, pageSize, pageInfo, loaded, cachedAt];
 }

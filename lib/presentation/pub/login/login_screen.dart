@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:note_book/domain/models/auth_models/login_req_model.dart';
-import 'package:note_book/domain/models/auth_models/sign_up_req_model.dart';
-import 'package:note_book/infra/common/common_widgets/form_fields/PrimaryTextInputField.dart';
-import 'package:note_book/infra/core/configs/theme/app_colors.dart';
 import 'package:note_book/infra/extensions/media_query_extension.dart';
 import 'package:note_book/infra/loader/overlay_service.dart';
 import 'package:note_book/infra/utils/enums.dart';
@@ -49,9 +46,9 @@ class LoginScreen extends StatelessWidget {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
         LoginEvent(
-          req: SignUpReqModel(
+          req: LoginReqModel(
             email: _emailController.text.trim(),
-            password: _passController.text, name: 'dfger',phone: '3535'
+            password: _passController.text,
           ),
         ),
       );

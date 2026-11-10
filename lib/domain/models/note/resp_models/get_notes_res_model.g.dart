@@ -10,9 +10,10 @@ GetNotesResModel _$GetNotesResModelFromJson(Map<String, dynamic> json) =>
     GetNotesResModel(
       status: json['status'] as bool,
       message: json['message'] as String?,
-      data: (json['data'] as List<dynamic>?)
-          ?.map((e) => NoteDataModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      data:
+          (json['data'] as List<dynamic>?)
+              ?.map((e) => NoteDataModel.fromJson(e as Map<String, dynamic>))
+              .toList(),
       totalPage: (json['totalPage'] as num?)?.toInt() ?? 1,
       currentPage: (json['currentPage'] as num?)?.toInt() ?? 1,
       pageSize: (json['pageSize'] as num?)?.toInt() ?? 10,

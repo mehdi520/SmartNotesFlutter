@@ -39,10 +39,12 @@ class NoteCard extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
                   ),
                   if (onDownload != null)
                     IconButton(
@@ -58,20 +60,19 @@ class NoteCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(category,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.grey.shade600)),
+                      child: Text(
+                        category,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
                     ),
                     if (attachmentCount > 0) ...[
                       Icon(Icons.attach_file, size: 16, color: Colors.grey.shade600),
                       Text('$attachmentCount', style: TextStyle(color: Colors.grey.shade600)),
                       const SizedBox(width: 10),
                     ],
-                    Text(
-                      DateUtil.getDateFromServerDate(date),
-                      style: TextStyle(color: Colors.grey.shade600),
-                    ),
+                    Text(DateUtil.getDateFromServerDate(date), style: TextStyle(color: Colors.grey.shade600)),
                   ],
                 ),
               ),

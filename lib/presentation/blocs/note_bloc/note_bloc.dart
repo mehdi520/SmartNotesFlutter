@@ -1,4 +1,6 @@
-import 'package:bloc/bloc.dart';
+import 'package:note_book/infra/network/api_error.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:note_book/domain/models/common_models/base_response_model.dart';
@@ -20,6 +22,15 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
   /// Increases with every list request so a slow, older response (e.g. while typing a search)
   /// can't overwrite a newer one.
   int _requestId = 0;
+
+  /// 0.0–1.0 while attachments of a saved note are uploading, otherwise null.
+  final ValueNotifier<double?> uploadProgress = ValueNotifier(null);
+
+  @override
+  Future<void> close() {
+    uploadProgress.dispose();
+    return super.close();
+  }
 
   NoteBloc({int categoryId = 0, int pageSize = 10})
       : super(NoteState(categoryId: categoryId, pageSize: pageSize)) {
@@ -78,6 +89,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
             notes: model.data ?? [],
             pageInfo: model.pageInfo,
             loaded: true,
+            cachedAt: () => model.cachedAt,
             apiIdentifier: "get_notes",
           ));
           emit(state.copyWith(apiStatus: ApiStatus.initial, apiIdentifier: "get_notes"));
@@ -87,7 +99,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       if (requestId != _requestId) return;
       emit(state.copyWith(
         apiStatus: ApiStatus.error,
-        resp: BaseResponseModel(status: false, message: e.toString()),
+        resp: BaseResponseModel(status: false, message: ApiError.generic),
         apiIdentifier: "get_notes",
       ));
     }
@@ -108,7 +120,13 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
       // Upload the files picked before saving (new notes have no id until saved).
       final noteId = resp.id ?? event.req.noteId;
       if (event.files.isNotEmpty && noteId > 0) {
-        final Either uploaded = await noteUsecase.uploadAttachments(noteId, event.files);
+        uploadProgress.value = 0;
+        final Either uploaded = await noteUsecase.uploadAttachments(
+          noteId,
+          event.files,
+          onProgress: (p) => uploadProgress.value = p,
+        );
+        uploadProgress.value = null;
         uploaded.fold(
           (error) => resp = BaseResponseModel(
             status: true,
@@ -124,7 +142,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
     } catch (e) {
       emit(state.copyWith(
         apiStatus: ApiStatus.error,
-        resp: BaseResponseModel(status: false, message: e.toString()),
+        resp: BaseResponseModel(status: false, message: ApiError.generic),
         apiIdentifier: "add_update_note",
       ));
     }
@@ -144,7 +162,7 @@ class NoteBloc extends Bloc<NoteEvent, NoteState> {
     } catch (e) {
       emit(state.copyWith(
         apiStatus: ApiStatus.error,
-        resp: BaseResponseModel(status: false, message: e.toString()),
+        resp: BaseResponseModel(status: false, message: ApiError.generic),
         apiIdentifier: "delete_note",
       ));
     }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:note_book/infra/common/common_widgets/offline_banner.dart';
 import 'package:note_book/infra/common/common_widgets/pagination/pagination_bar.dart';
 import 'package:note_book/infra/common/common_widgets/search/app_search_field.dart';
 import 'package:note_book/infra/core/core_exports.dart';
 import 'package:note_book/infra/extensions/media_query_extension.dart';
 import 'package:note_book/infra/loader/overlay_service.dart';
+import 'package:note_book/infra/network/session_manager.dart';
 import 'package:note_book/infra/pdf/pdf_download_helper.dart';
 import 'package:note_book/infra/utils/enums.dart';
 import 'package:note_book/infra/utils/toast_utils.dart';
@@ -107,6 +109,13 @@ class _NoteDashboardContent extends StatelessWidget {
                   onChanged: (v) => _onSearch(context, v),
                 ),
                 const SizedBox(height: 16),
+                BlocBuilder<CatBloc, CatState>(
+                  buildWhen: (p, c) => p.cachedAt != c.cachedAt,
+                  builder: (context, state) => OfflineBanner(
+                    cachedAt: state.cachedAt,
+                    onRetry: () => context.read<CatBloc>().add(GetCatEvent()),
+                  ),
+                ),
 
                 Expanded(
                   child: BlocBuilder<CatBloc, CatState>(
@@ -114,8 +123,13 @@ class _NoteDashboardContent extends StatelessWidget {
                       final searching = state.search.isNotEmpty;
                       return RefreshIndicator(
                         onRefresh: () async {
-                          context.read<CatBloc>().add(GetCatEvent());
+                          final cats = context.read<CatBloc>();
+                          cats.add(GetCatEvent());
                           if (searching) context.read<NoteBloc>().add(RefreshNotesEvent());
+                          // Keep the spinner until the notebooks have reloaded.
+                          await cats.stream
+                              .firstWhere((s) => s.apiIdentifier == 'get_cat' && s.apiStatus != ApiStatus.loading)
+                              .timeout(const Duration(seconds: 30), onTimeout: () => cats.state);
                         },
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -209,7 +223,7 @@ class _NoteDashboardContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.deepPurple.withOpacity(0.3),
+            color: Colors.deepPurple.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: Offset(0, 10),
           ),
@@ -220,7 +234,7 @@ class _NoteDashboardContent extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(Icons.pie_chart, color: Colors.white, size: 32),
@@ -343,17 +357,8 @@ class _NoteDashboardContent extends StatelessWidget {
               size: 25,
             ),
             title: Text('Logout'),
-            onTap: () {
-              // Clear user data and token
-              HiveManager.clearUserData();
-
-              // Clear navigation stack and go to login
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                AppRoutes.loginRoute,
-                    (route) => false,
-              );
-            },
+            // Clears the token, profile and offline cache, then goes to login.
+            onTap: SessionManager.logout,
           ),
         ],
       ),

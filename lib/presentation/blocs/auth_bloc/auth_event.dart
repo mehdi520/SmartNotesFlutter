@@ -8,7 +8,7 @@ abstract class AuthEvent extends Equatable {
 }
 
 class LoginEvent extends AuthEvent {
-  final SignUpReqModel req;
+  final LoginReqModel req;
 
   const LoginEvent({required this.req});
 

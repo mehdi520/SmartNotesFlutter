@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:note_book/infra/core/core_exports.dart';
 
 import '../form_fields/PrimaryTextInputField.dart';
 

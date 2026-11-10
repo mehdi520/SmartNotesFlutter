@@ -7,7 +7,6 @@ import 'package:note_book/infra/core/core_exports.dart';
 import 'package:note_book/infra/loader/overlay_service.dart';
 import 'package:note_book/infra/utils/enums.dart';
 import 'package:note_book/infra/utils/toast_utils.dart';
-import 'package:note_book/infra/utils/validation_utils.dart';
 import 'package:note_book/presentation/blocs/user_bloc/user_bloc.dart';
 
 class ChangePassScreen extends StatelessWidget {
@@ -36,18 +35,18 @@ class ChangePassScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    final _currentPasswordController = TextEditingController();
-    final _newPasswordController = TextEditingController();
-    final _confirmPasswordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
 
-    void _changePassword() {
-      if (_formKey.currentState!.validate()) {
+    void changePassword() {
+      if (formKey.currentState!.validate()) {
         context.read<UserBloc>().add(
           ChangePasswordEvent(
             req: PassChangeReqModel(
-              oldPass: _currentPasswordController.text,
-              newPass: _newPasswordController.text,
+              oldPass: currentPasswordController.text,
+              newPass: newPasswordController.text,
             ),
           ),
         );
@@ -76,14 +75,14 @@ class ChangePassScreen extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
-              key: _formKey,
+              key: formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 20),
                   Textinputformfield(
                     hintText: 'Enter current password',
-                    ctrl: _currentPasswordController,
+                    ctrl: currentPasswordController,
                     formLabel: 'Current Password',
                     isSecureTextField: true,
                     validator: _validatePassword,
@@ -91,7 +90,7 @@ class ChangePassScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Textinputformfield(
                     hintText: 'Enter new password',
-                    ctrl: _newPasswordController,
+                    ctrl: newPasswordController,
                     formLabel: 'New Password',
                     isSecureTextField: true,
                     validator: _validatePassword,
@@ -99,18 +98,18 @@ class ChangePassScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Textinputformfield(
                     hintText: 'Confirm new password',
-                    ctrl: _confirmPasswordController,
+                    ctrl: confirmPasswordController,
                     formLabel: 'Confirm Password',
                     isSecureTextField: true,
                     validator: (value) => _validateConfirmPassword(
                       value,
-                      _newPasswordController.text,
+                      newPasswordController.text,
                     ),
                   ),
                   const SizedBox(height: 30),
                   PrimaryButton(
                     text: 'Change Password',
-                    onTap: _changePassword,
+                    onTap: changePassword,
                   ),
                 ],
               ),

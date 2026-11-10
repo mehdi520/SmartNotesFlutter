@@ -11,7 +11,7 @@ class CatModel extends Equatable{
 
 
 
-  CatModel({
+  const CatModel({
     required this.noteBookId,
     this.title,
     required this.userId,
